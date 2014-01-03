@@ -1,5 +1,11 @@
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
+	AVR32 patch 42-gcc-avr32-fix-reorg_opt_bug11763
+
+	* config/avr32/avr32.c: Patches for AVR32.
+
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
 	AVR32 patch 41-gcc-avr32-fix-const_int_addr
 
 	* config/avr32/avr32.c: Patches for AVR32.

@@ -6633,12 +6633,23 @@ avr32_reorg_optimization (void)
                         continue;
 
 		      set = single_set (scan);
-		      if (set && rtx_equal_p (src_reg, SET_DEST (set)))
-			{
-			  link = scan;
-			  break;
-			}
-
+                      // Fix for bug #11763 : the following if condition
+                      // has been modified and else part is included to 
+                      // set the link to NULL_RTX. 
+                      // if (set && rtx_equal_p (src_reg, SET_DEST (set)))
+                      if (set && (REGNO(src_reg) == REGNO(SET_DEST(set))))
+                       {
+                         if (rtx_equal_p (src_reg, SET_DEST (set)))
+			  {
+			    link = scan;
+			    break;
+                          }
+                         else
+                          {
+                            link = NULL_RTX;
+                            break;
+                          }
+                       }
                     }
 
 
