@@ -59,22 +59,25 @@ MULTILIB_MATCHES     += march?ucr1=mpart?uc3b1256
 MULTILIB_MATCHES     += march?ucr2=mpart?uc3b1512
 MULTILIB_MATCHES     += march?ucr2=mpart?uc3b1512revc
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3c0512crevc
-MULTILIB_MATCHES     += march?ucr3=mpart?uc3c0256c
-MULTILIB_MATCHES     += march?ucr3=mpart?uc3c0128c
-MULTILIB_MATCHES     += march?ucr3=mpart?uc3c064c
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3c1512crevc
-MULTILIB_MATCHES     += march?ucr3=mpart?uc3c1256c
-MULTILIB_MATCHES     += march?ucr3=mpart?uc3c1128c
-MULTILIB_MATCHES     += march?ucr3=mpart?uc3c164c
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3c2512crevc
-MULTILIB_MATCHES     += march?ucr3=mpart?uc3c2256c
-MULTILIB_MATCHES     += march?ucr3=mpart?uc3c2128c
-MULTILIB_MATCHES     += march?ucr3=mpart?uc3c264c
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l0256
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l032
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l016
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064revb
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c064c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c0128c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c0256c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c0512c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c164c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c1128c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c1256c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c1512c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c264c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c2128c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c2256c
+MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c2512c
 MULTILIB_MATCHES     += march?ucr3=mpart?mxt768e
 
 
