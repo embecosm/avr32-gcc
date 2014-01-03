@@ -1,5 +1,11 @@
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
+	AVR32 patch 40-gcc-avr32-fpemul-fixes
+
+	* config/avr32/lib1funcs.S: Patches for AVR32.
+
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
 	AVR32 patch 36-gcc-avr32-list-devices
 
 	* config/avr32/avr32.c: Patches for AVR32.
