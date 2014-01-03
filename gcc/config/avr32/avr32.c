@@ -1941,10 +1941,13 @@ avr32_expand_builtin (tree exp,
  	   devices. By this check we are avoiding if operand is less than  
  	   256. For more devices, add more such checks. */
  	 
+        // Device belongs to UC3L series
  	if ( strncmpval == 0 && intval >= 7)  
-        error ("Parameter 1 to __builtin_sleep() should be less than or equal to 7.");
- 	else if ( strncmp != 0 && intval >= 6)
- 	    error ("Parameter 1 to __builtin_sleep() should be less than or equal to 6.");
+            error ("Parameter 1 to __builtin_sleep() should be less than 7.");
+
+        // Other devices
+ 	else if ( strncmpval != 0 && intval >= 6)
+ 	    error ("Parameter 1 to __builtin_sleep() should be less than 6.");
  
  	emit_insn (gen_sleep(op0));
  	return target;
