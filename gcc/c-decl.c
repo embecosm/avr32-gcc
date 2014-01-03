@@ -2463,8 +2463,8 @@ undeclared_variable (tree id, location_t loc)
 
       if (!already)
 	{
-	  error ("%H(Each undeclared identifier is reported only once", &loc);
-	  error ("%Hfor each function it appears in.)", &loc);
+          inform (loc, "each undeclared identifier is reported only"
+                  " once for each function it appears in");
 	  already = true;
 	}
 

@@ -1,0 +1,6 @@
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
+	AVR32 patch 00-gcc-avr32-avrtc661
+
+	* c-decl.c: Patches for AVR32.
+
