@@ -950,6 +950,9 @@ __avr32_f64_add:
         /* Get shift amount to scale mantissa of op2. */
         rsub    r6, r7
         breq    __avr32_f64_add_shift_done /* No need to shift, exponents are equal*/
+
+        cp.w    r6, 54       /* handle shifts >= 54 separately */
+        brhs    __avr32_f64_add_res_of_done /*There is no possibility of rounding */ 
  
         /* Scale mantissa [r9, r8] with amount [r6].
         Uses scratch registers [r5] and [lr].
