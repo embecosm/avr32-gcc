@@ -94,6 +94,7 @@
    (VUNSPEC_FRS                       27)
    (VUNSPEC_CSRF                      28)
    (VUNSPEC_SSRF                      29)
+   (VUNSPEC_SLEEP                     30)
    ])
 
 (define_constants
@@ -3878,6 +3879,15 @@
   [(set_attr "type" "alu_sat")
    (set_attr "length" "4")]
   )
+
+(define_insn "sleep"
+  [(unspec_volatile [(const_int 0)] VUNSPEC_SLEEP)
+  (match_operand:SI 0 "const_int_operand" "")]
+  ""
+  "sleep	%0"
+  [(set_attr "length" "1")
+   (set_attr "cc"  "none")
+  ])
 
 ;; Special patterns for dealing with the constant pool
 

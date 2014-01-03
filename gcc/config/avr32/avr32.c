@@ -1100,6 +1100,7 @@ avr32_init_builtins (void)
   def_builtin ("__builtin_mems", void_ftype_ptr_int, AVR32_BUILTIN_MEMS);
   def_builtin ("__builtin_memt", void_ftype_ptr_int, AVR32_BUILTIN_MEMT);
   def_builtin ("__builtin_memc", void_ftype_ptr_int, AVR32_BUILTIN_MEMC);
+  def_builtin ("__builtin_sleep", void_ftype_int, AVR32_BUILTIN_SLEEP);
 
   /* Add all builtins that are more or less simple operations on two
      operands.  */
@@ -1881,6 +1882,35 @@ avr32_expand_builtin (tree exp,
          return op0;
        }
        
+     case AVR32_BUILTIN_SLEEP:
+       {
+ 	arg0 = CALL_EXPR_ARG (exp, 0);
+ 	op0  = expand_normal (arg0);
+ 	int intval = INTVAL(op0);
+ 
+ 	/* Check if the argument if integer and if the value of integer
+ 	   is greater than 0. */ 
+ 	 
+ 	if (!CONSTANT_P (op0))
+         error ("Parameter 1 to __builtin_sleep() is not a valid integer.");
+ 	if (intval < 0 )
+ 	     error ("Parameter 1 to __builtin_sleep() should be an integer greater than 0.");
+ 
+         int strncmpval = strncmp (avr32_part_name,"uc3l", 4);
+  
+ 	/* Check if op0 is less than 7 for uc3l* and less than 6 for other
+ 	   devices. By this check we are avoiding if operand is less than  
+ 	   256. For more devices, add more such checks. */
+ 	 
+ 	if ( strncmpval == 0 && intval >= 7)  
+        error ("Parameter 1 to __builtin_sleep() should be less than or equal to 7.");
+ 	else if ( strncmp != 0 && intval >= 6)
+ 	    error ("Parameter 1 to __builtin_sleep() should be less than or equal to 6.");
+ 
+ 	emit_insn (gen_sleep(op0));
+ 	return target;
+ 
+       }	
     }
 
   for (i = 0, d = bdesc_2arg; i < ARRAY_SIZE (bdesc_2arg); i++, d++)
