@@ -62,6 +62,7 @@ MULTILIB_MATCHES     += march?ucr3=mpart?uc3c0512crevc
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3c1512crevc
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3c2512crevc
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l0256
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3l0128
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l032
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l016

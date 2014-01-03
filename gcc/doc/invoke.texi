@@ -9417,6 +9417,7 @@ Generate code for the specified part. Permissible parts are:
 @samp{uc3c1512crevc},
 @samp{uc3c2512crevc},
 @samp{uc3l0256},
+@samp{uc3l0128},
 @samp{uc3l064},
 @samp{uc3l032},
 @samp{uc3l016},
