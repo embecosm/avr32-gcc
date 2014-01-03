@@ -46,6 +46,12 @@ MULTILIB_MATCHES     += march?ucr2=mpart?uc3a3128
 MULTILIB_MATCHES     += march?ucr2=mpart?uc3a3128s
 MULTILIB_MATCHES     += march?ucr2=mpart?uc3a3256
 MULTILIB_MATCHES     += march?ucr2=mpart?uc3a3256s
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a464
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a464s
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a4128
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a4128s
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a4256
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a4256s
 MULTILIB_MATCHES     += march?ucr1=mpart?uc3b064
 MULTILIB_MATCHES     += march?ucr1=mpart?uc3b0128
 MULTILIB_MATCHES     += march?ucr1=mpart?uc3b0256es
