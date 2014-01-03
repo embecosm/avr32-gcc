@@ -1,5 +1,11 @@
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
+	AVR32 patch 45-gcc-avr32-bug-7435
+
+	* config/avr32/avr32.c: Patches for AVR32.
+
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
 	AVR32 patch 44-gcc-avr32-bug-12671
 
 	* config/avr32/avr32.c: Patches for AVR32.
