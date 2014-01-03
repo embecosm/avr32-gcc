@@ -386,7 +386,7 @@ output_insn_data (void)
 	}
 
       if (d->name && d->name[0] != '*')
-	printf ("    (insn_gen_fn) gen_%s,\n", d->name);
+	printf ("    gen_%s,\n", d->name);
       else
 	printf ("    0,\n");
 

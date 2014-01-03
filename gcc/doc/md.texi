@@ -4,6 +4,7 @@
 @c This is part of the GCC manual.
 @c For copying conditions, see the file gcc.texi.
 
+
 @ifset INTERNALS
 @node Machine Desc
 @chapter Machine Descriptions
@@ -1683,6 +1684,58 @@ A memory reference suitable for iWMMXt load/store instructions.
 
 @item Uq
 A memory reference suitable for the ARMv4 ldrsb instruction.
+@end table
+
+@item AVR32 family---@file{avr32.h}
+@table @code
+@item f
+Floating-point registers (f0 to f15)
+
+@item Ku@var{bits}
+Unsigned constant representable with @var{bits} number of bits (Must be
+two digits). I.e: An unsigned 8-bit constant is written as @samp{Ku08}  
+ 
+@item Ks@var{bits}
+Signed constant representable with @var{bits} number of bits (Must be
+two digits). I.e: A signed 12-bit constant is written as @samp{Ks12}  
+
+@item Is@var{bits}
+The negated range of a signed constant representable with  @var{bits} 
+number of bits. The same as @samp{Ks@var{bits}} with a negated range. 
+This means that the constant must be in the range @math{-2^{bits-1}-1} to @math{2^{bits-1}}
+
+@item G
+A single/double precision floating-point immediate or 64-bit integer 
+immediate where the least and most significant words both can be
+loaded with a move instruction. That is the the integer form of the 
+values in the least and most significant words both are in the range 
+@math{-2^{20}} to @math{2^{20}-1}.
+         
+@item RKs@var{bits}
+A memory reference where the address consists of a base register
+plus a signed immediate displacement with range given by @samp{Ks@var{bits}}
+which has the same format as for the signed immediate integer constraint
+given above.  
+
+@item RKu@var{bits}
+A memory reference where the address consists of a base register
+plus an unsigned immediate displacement with range given by @samp{Ku@var{bits}}
+which has the same format as for the unsigned immediate integer constraint
+given above.  
+
+@item S
+A memory reference with an immediate or register offset
+
+@item T
+A memory reference to a constant pool entry
+
+@item W
+A valid operand for use in the @samp{lda.w} instruction macro when
+relaxing is enabled
+
+@item Z
+A memory reference valid for coprocessor memory instructions
+
 @end table
 
 @item AVR family---@file{config/avr/constraints.md}

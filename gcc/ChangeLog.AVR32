@@ -1,5 +1,51 @@
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
+	AVR32 patch 30-gcc-avr32
+
+	* builtins.c: Patches for AVR32.
+	* calls.c: Patches for AVR32.
+	* config/avr32/avr32.c: Patches for AVR32.
+	* config/avr32/avr32-elf.h: Patches for AVR32.
+	* config/avr32/avr32.h: Patches for AVR32.
+	* config/avr32/avr32.md: Patches for AVR32.
+	* config/avr32/avr32-modes.def: Patches for AVR32.
+	* config/avr32/avr32.opt: Patches for AVR32.
+	* config/avr32/avr32-protos.h: Patches for AVR32.
+	* config/avr32/crti.asm: Patches for AVR32.
+	* config/avr32/crtn.asm: Patches for AVR32.
+	* config/avr32/fpcp.md: Patches for AVR32.
+	* config/avr32/lib1funcs.S: Patches for AVR32.
+	* config/avr32/lib2funcs.S: Patches for AVR32.
+	* config/avr32/linux-elf.h: Patches for AVR32.
+	* config/avr32/predicates.md: Patches for AVR32.
+	* config/avr32/simd.md: Patches for AVR32.
+	* config/avr32/sync.md: Patches for AVR32.
+	* config/avr32/t-avr32: Patches for AVR32.
+	* config/avr32/t-avr32-linux: Patches for AVR32.
+	* config/avr32/t-elf: Patches for AVR32.
+	* config/avr32/uclinux-elf.h: Patches for AVR32.
+	* config/host-linux.c: Patches for AVR32.
+	* config.gcc: Patches for AVR32.
+	* configure.ac: Patches for AVR32.
+	* doc/extend.texi: Patches for AVR32.
+	* doc/invoke.texi: Patches for AVR32.
+	* doc/md.texi: Patches for AVR32.
+	* expmed.c: Patches for AVR32.
+	* expr.c: Patches for AVR32.
+	* function.c: Patches for AVR32.
+	* genemit.c: Patches for AVR32.
+	* genflags.c: Patches for AVR32.
+	* genoutput.c: Patches for AVR32.
+	* ifcvt.c: Patches for AVR32.
+	* longlong.h: Patches for AVR32.
+	* optabs.h: Patches for AVR32.
+	* sched-deps.c: Patches for AVR32.
+	* testsuite/gcc.dg/sibcall-3.c: Patches for AVR32.
+	* testsuite/gcc.dg/sibcall-4.c: Patches for AVR32.
+	* testsuite/gcc.dg/trampoline-1.c: Patches for AVR32.
+
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
 	AVR32 patch 00-gcc-avr32-avrtc661
 
 	* c-decl.c: Patches for AVR32.

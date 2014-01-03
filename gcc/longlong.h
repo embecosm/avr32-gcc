@@ -250,6 +250,41 @@ UDItype __umulsidi3 (USItype, USItype);
 #define COUNT_LEADING_ZEROS_0 32
 #endif
 
+#if defined (__avr32__) && W_TYPE_SIZE == 32
+#define add_ssaaaa(sh, sl, ah, al, bh, bl) \
+  __asm__ ("add\t%1, %4, %5\n\tadc\t%0, %2, %3"		\
+	   : "=r" ((USItype) (sh)),					\
+	     "=&r" ((USItype) (sl))					\
+	   : "r" ((USItype) (ah)),					\
+	     "r" ((USItype) (bh)),					\
+	     "r" ((USItype) (al)),					\
+	     "r" ((USItype) (bl)) __CLOBBER_CC)
+#define sub_ddmmss(sh, sl, ah, al, bh, bl) \
+  __asm__ ("sub\t%1, %4, %5\n\tsbc\t%0, %2, %3"		\
+	   : "=r" ((USItype) (sh)),					\
+	     "=&r" ((USItype) (sl))					\
+	   : "r" ((USItype) (ah)),					\
+	     "r" ((USItype) (bh)),					\
+	     "r" ((USItype) (al)),					\
+	     "r" ((USItype) (bl)) __CLOBBER_CC)
+
+#if !defined (__AVR32_NO_MUL__)
+#define __umulsidi3(a,b) ((UDItype)(a) * (UDItype)(b))
+
+#define umul_ppmm(w1, w0, u, v) \
+{									\
+  DWunion __w;								\
+  __w.ll = __umulsidi3 (u, v);						\
+  w1 = __w.s.high;							\
+  w0 = __w.s.low;							\
+}
+#endif
+
+#define count_leading_zeros(COUNT,X)	((COUNT) = __builtin_clz (X))
+#define count_trailing_zeros(COUNT,X)	((COUNT) = __builtin_ctz (X))
+#define COUNT_LEADING_ZEROS_0 32
+#endif
+
 #if defined (__CRIS__) && __CRIS_arch_version >= 3
 #define count_leading_zeros(COUNT, X) ((COUNT) = __builtin_clz (X))
 #if __CRIS_arch_version >= 8

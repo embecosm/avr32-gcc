@@ -1,0 +1,84 @@
+; Options for the ATMEL AVR32 port of the compiler.
+
+; Copyright 2007 Atmel Corporation.
+;
+; This file is part of GCC.
+;
+; GCC is free software; you can redistribute it and/or modify it under
+; the terms of the GNU General Public License as published by the Free
+; Software Foundation; either version 2, or (at your option) any later
+; version.
+;
+; GCC is distributed in the hope that it will be useful, but WITHOUT ANY
+; WARRANTY; without even the implied warranty of MERCHANTABILITY or
+; FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+; for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with GCC; see the file COPYING.  If not, write to the Free
+; Software Foundation, 51 Franklin Street, Fifth Floor, Boston, MA
+; 02110-1301, USA.
+
+muse-rodata-section
+Target Report Mask(USE_RODATA_SECTION)
+Use section .rodata for read-only data instead of .text.
+
+mhard-float
+Target Report Mask(HARD_FLOAT)
+Use FPU instructions instead of floating point emulation.
+
+msoft-float
+Target Report InverseMask(HARD_FLOAT, SOFT_FLOAT)
+Use floating point emulation for floating point operations.
+
+mforce-double-align
+Target Report RejectNegative Mask(FORCE_DOUBLE_ALIGN)
+Force double-word alignment for double-word memory accesses.
+
+mno-init-got
+Target Report RejectNegative Mask(NO_INIT_GOT)
+Do not initialize GOT register before using it when compiling PIC code.
+
+mrelax
+Target Report Mask(RELAX)
+Let invoked assembler and linker do relaxing (Enabled by default when optimization level is >1).
+
+mmd-reorg-opt
+Target Report Undocumented Mask(MD_REORG_OPTIMIZATION)
+Perform machine dependent optimizations in reorg stage.
+
+masm-addr-pseudos
+Target Report Mask(HAS_ASM_ADDR_PSEUDOS) 
+Use assembler pseudo-instructions lda.w and call for handling direct addresses. (Enabled by default)
+
+mpart=
+Target Report RejectNegative Joined Var(avr32_part_name)
+Specify the AVR32 part name
+
+mcpu=
+Target Report RejectNegative Joined Undocumented Var(avr32_part_name)
+Specify the AVR32 part name (deprecated)
+
+march=
+Target Report RejectNegative Joined Var(avr32_arch_name)
+Specify the AVR32 architecture name
+
+mfast-float
+Target Report Mask(FAST_FLOAT)
+Enable fast floating-point library. Enabled by default if the -funsafe-math-optimizations switch is specified.
+
+mimm-in-const-pool
+Target Report Var(avr32_imm_in_const_pool) Init(-1)
+Put large immediates in constant pool. This is enabled by default for archs with insn-cache.
+
+mno-pic
+Target Report RejectNegative Mask(NO_PIC)
+Do not generate position-independent code. (deprecated, use -fno-pic instead)
+
+mcond-exec-before-reload
+Target Report Undocumented Mask(COND_EXEC_BEFORE_RELOAD) 
+Enable experimental conditional execution preparation before the reload stage. 
+
+mflashvault
+Target Var(TARGET_FLASHVAULT)
+Generate code for flashvault

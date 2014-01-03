@@ -810,6 +810,24 @@ avr-*-rtems*)
 avr-*-*)
 	tm_file="avr/avr.h dbxelf.h"
 	;;
+avr32*-*-linux*)
+	tm_file="dbxelf.h elfos.h linux.h avr32/linux-elf.h avr32/avr32.h "
+	tmake_file="t-linux avr32/t-avr32 avr32/t-elf"
+	extra_parts="crtbegin.o crtbeginS.o crtend.o crtendS.o"
+	extra_modes=avr32/avr32-modes.def
+	gnu_ld=yes
+	;;
+avr32*-*-uclinux*)
+	tm_file="dbxelf.h elfos.h linux.h avr32/linux-elf.h avr32/uclinux-elf.h avr32/avr32.h"
+	tmake_file="t-linux avr32/t-avr32-linux"
+	extra_modes=avr32/avr32-modes.def
+	gnu_ld=yes
+	;;
+avr32-*-*)
+	tm_file="dbxelf.h elfos.h avr32/avr32.h avr32/avr32-elf.h"
+	tmake_file="avr32/t-avr32 avr32/t-elf"
+	extra_modes=avr32/avr32-modes.def
+	;;
 bfin*-elf*)
 	tm_file="${tm_file} dbxelf.h elfos.h bfin/elf.h"
 	tmake_file=bfin/t-bfin-elf
@@ -2735,6 +2753,32 @@ case "${target}" in
 			echo "Warning: --with-arch overrides --with-cpu=$with_cpu" 1>&2
 		fi
 		;;
+
+	avr32*-*-*)
+		supported_defaults="part arch"
+
+		case "$with_part" in
+		"" \
+		| "ap7000" | "ap7010" | "ap7020" | "uc3a0256" | "uc3a0512" | "uc3a1128" | "uc3a1256" | "uc3a1512" )
+			# OK
+			;;
+		*)
+			echo "Unknown part used in --with-part=$with_part" 1>&2
+			exit 1
+			;;
+		esac
+
+		case "$with_arch" in
+		"" \
+		| "ap" | "uc")
+			# OK
+			;;
+		*)
+			echo "Unknown arch used in --with-arch=$with_arch" 1>&2
+			exit 1
+			;;
+		esac
+                ;;
 
 	fr*-*-*linux*)
 		supported_defaults=cpu

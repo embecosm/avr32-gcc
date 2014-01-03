@@ -195,7 +195,7 @@ in the following sections.
 -fvisibility-ms-compat @gol
 -Wabi  -Wctor-dtor-privacy @gol
 -Wnon-virtual-dtor  -Wreorder @gol
--Weffc++  -Wstrict-null-sentinel @gol
+-Weffc++  -Wno-deprecated @gol
 -Wno-non-template-friend  -Wold-style-cast @gol
 -Woverloaded-virtual  -Wno-pmf-conversions @gol
 -Wsign-promo}
@@ -640,6 +640,12 @@ Objective-C and Objective-C++ Dialects}.
 @gccoptlist{-m6811  -m6812  -m68hc11  -m68hc12   -m68hcs12 @gol
 -mauto-incdec  -minmax  -mlong-calls  -mshort @gol
 -msoft-reg-count=@var{count}}
+
+@emph{AVR32 Options}
+@gccoptlist{-muse-rodata-section -mhard-float -msoft-float -mrelax @gol
+-mforce-double-align -mno-init-got -mrelax -mmd-reorg-opt -masm-addr-pseudos @gol
+-mpart=@var{part} -mcpu=@var{cpu} -march=@var{arch} @gol  
+-mfast-float -mimm-in-const-pool}
 
 @emph{MCore Options}
 @gccoptlist{-mhardlit  -mno-hardlit  -mdiv  -mno-div  -mrelax-immediates @gol
@@ -3256,13 +3262,11 @@ appears in a class without constructors.
 If you want to warn about code which uses the uninitialized value of the
 variable in its own initializer, use the @option{-Winit-self} option.
 
-These warnings occur for individual uninitialized or clobbered
-elements of structure, union or array variables as well as for
-variables which are uninitialized or clobbered as a whole.  They do
-not occur for variables or elements declared @code{volatile}.  Because
-these warnings depend on optimization, the exact variables or elements
-for which there are warnings will depend on the precise optimization
-options and version of GCC used.
+These warnings occur only for variables that are candidates for
+register allocation.  Therefore, they do not occur for a variable that
+is declared @code{volatile}, or whose address is taken, or whose size
+is other than 1, 2, 4 or 8 bytes.  Also, they do not occur for
+structures, unions or arrays, even when they are in registers.
 
 Note that there may be no warning about a variable that is used only
 to compute a value that itself is never used, because such
@@ -7445,10 +7449,6 @@ If number of candidates in the set is smaller than this value,
 we always try to remove unnecessary ivs from the set during its
 optimization when a new iv is added to the set.
 
-@item scev-max-expr-size
-Bound on size of expressions used in the scalar evolutions analyzer.
-Large expressions slow the analyzer.
-
 @item omega-max-vars
 The maximum number of variables in an Omega constraint system.
 The default value is 128.
@@ -8844,6 +8844,7 @@ platform.
 * ARC Options::
 * ARM Options::
 * AVR Options::
+* AVR32 Options::
 * Blackfin Options::
 * CRIS Options::
 * CRX Options::
@@ -9332,6 +9333,124 @@ comply to the C standards, but it will provide you with smaller code
 size.
 @end table
 
+@node AVR32 Options
+@subsection AVR32 Options
+@cindex AVR32 Options
+
+These options are defined for AVR32 implementations:
+
+@table @gcctabopt
+@item -muse-rodata-section
+@opindex muse-rodata-section
+Use section @samp{.rodata} for read-only data instead of @samp{.text}.
+
+@item -mhard-float
+@opindex mhard-float
+Use floating point coprocessor instructions.
+
+@item -msoft-float
+@opindex msoft-float
+Use software floating-point library for floating-point operations.
+
+@item -mforce-double-align
+@opindex mforce-double-align
+Force double-word alignment for double-word memory accesses.
+
+@item -masm-addr-pseudos
+@opindex masm-addr-pseudos
+Use assembler pseudo-instructions lda.w and call for handling direct
+addresses. (Enabled by default)
+
+@item -mno-init-got
+@opindex mno-init-got
+Do not initialize the GOT register before using it when compiling PIC
+code.
+
+@item -mrelax
+@opindex mrelax
+Let invoked assembler and linker do relaxing 
+(Enabled by default when optimization level is >1).
+This means that when the address of symbols are known at link time,
+the linker can optimize @samp{icall} and @samp{mcall}
+instructions into a @samp{rcall} instruction if possible. 
+Loading the address of a symbol can also be optimized.  
+
+@item -mmd-reorg-opt
+@opindex mmd-reorg-opt
+Perform machine dependent optimizations in reorg stage.
+
+@item -mpart=@var{part}
+@opindex mpart
+Generate code for the specified part. Permissible parts are: 
+@samp{ap7000},
+@samp{ap7001},
+@samp{ap7002},
+@samp{ap7200},
+@samp{uc3a0128},
+@samp{uc3a0256},
+@samp{uc3a0512},
+@samp{uc3a0512es},
+@samp{uc3a1128},
+@samp{uc3a1256},
+@samp{uc3a1512},
+@samp{uc3a1512es},
+@samp{uc3a3revd},
+@samp{uc3a364},
+@samp{uc3a364s},
+@samp{uc3a3128},
+@samp{uc3a3128s},
+@samp{uc3a3256},
+@samp{uc3a3256s},
+@samp{uc3b064},
+@samp{uc3b0128},
+@samp{uc3b0256},
+@samp{uc3b0256es},
+@samp{uc3b0512},
+@samp{uc3b0512revc},
+@samp{uc3b164},
+@samp{uc3b1128},
+@samp{uc3b1256},
+@samp{uc3b1256es},
+@samp{uc3b1512}
+@samp{uc3b1512revc}
+@samp{uc3c0512crevc},
+@samp{uc3c0256c},
+@samp{uc3c0128c},
+@samp{uc3c064c},
+@samp{uc3c1512crevc},
+@samp{uc3c1256c},
+@samp{uc3c1128c},
+@samp{uc3c164c},
+@samp{uc3c2512crevc},
+@samp{uc3c2256c},
+@samp{uc3c2128c},
+@samp{uc3c264c},
+@samp{uc3l0256},
+@samp{uc3l064},
+@samp{uc3l032},
+@samp{uc3l016},
+@samp{uc3l064revb}.
+
+@item -mcpu=@var{cpu-type}
+@opindex mcpu
+Same as -mpart. Obsolete.
+
+@item -march=@var{arch}
+@opindex march
+Generate code for the specified architecture. Permissible architectures are:
+@samp{ap}, @samp{uc} and @samp{ucr2}. 
+
+@item -mfast-float
+@opindex mfast-float
+Enable fast floating-point library that does not conform to IEEE-754 but is still good enough
+for most applications. The fast floating-point library does not round to the nearest even
+but away from zero. Enabled by default if the -funsafe-math-optimizations switch is specified. 
+
+@item -mimm-in-const-pool
+@opindex mimm-in-const-pool
+Put large immediates in constant pool. This is enabled by default for archs with insn-cache.
+@end table
+
 @node Blackfin Options
 @subsection Blackfin Options
 @cindex Blackfin Options
@@ -9387,29 +9506,12 @@ When enabled, the compiler will ensure that the generated code does not
 contain speculative loads after jump instructions. If this option is used,
 @code{__WORKAROUND_SPECULATIVE_LOADS} is defined.
 
-@item -mno-specld-anomaly
-@opindex mno-specld-anomaly
-Don't generate extra code to prevent speculative loads from occurring.
-
 @item -mcsync-anomaly
 @opindex mcsync-anomaly
 When enabled, the compiler will ensure that the generated code does not
 contain CSYNC or SSYNC instructions too soon after conditional branches.
 If this option is used, @code{__WORKAROUND_SPECULATIVE_SYNCS} is defined.
 
-@item -mno-csync-anomaly
-@opindex mno-csync-anomaly
-Don't generate extra code to prevent CSYNC or SSYNC instructions from
-occurring too soon after a conditional branch.
-
-@item -mlow-64k
-@opindex mlow-64k
-When enabled, the compiler is free to take advantage of the knowledge that
-the entire program fits into the low 64k of memory.
-
-@item -mno-low-64k
-@opindex mno-low-64k
-Assume that the program is arbitrarily large.  This is the default.
 
 @item -mstack-check-l1
 @opindex mstack-check-l1
@@ -9422,11 +9524,6 @@ Generate code that supports shared libraries via the library ID method.
 This allows for execute in place and shared libraries in an environment
 without virtual memory management.  This option implies @option{-fPIC}.
 With a @samp{bfin-elf} target, this option implies @option{-msim}.
-
-@item -mno-id-shared-library
-@opindex mno-id-shared-library
-Generate code that doesn't assume ID based shared libraries are being used.
-This is the default.
 
 @item -mleaf-id-shared-library
 @opindex mleaf-id-shared-library
@@ -9468,11 +9565,6 @@ address of the function into a register and then performing a subroutine
 call on this register.  This switch is needed if the target function
 will lie outside of the 24 bit addressing range of the offset based
 version of subroutine call instruction.
-
-This feature is not enabled by default.  Specifying
-@option{-mno-long-calls} will restore the default behavior.  Note these
-switches have no effect on how the compiler generates code to handle
-function calls via function pointers.
 
 @item -mfast-fp
 @opindex mfast-fp

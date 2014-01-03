@@ -1,0 +1,16 @@
+
+# Assemble startup files.
+$(T)crti.o: $(srcdir)/config/avr32/crti.asm $(GCC_PASSES)
+	$(GCC_FOR_TARGET) $(CRTSTUFF_CFLAGS) $(CRTSTUFF_T_CFLAGS) $(INCLUDES) \
+	-c -o $(T)crti.o -x assembler-with-cpp $(srcdir)/config/avr32/crti.asm
+
+$(T)crtn.o: $(srcdir)/config/avr32/crtn.asm $(GCC_PASSES)
+	$(GCC_FOR_TARGET) $(CRTSTUFF_CFLAGS) $(CRTSTUFF_T_CFLAGS) $(INCLUDES) \
+	-c -o $(T)crtn.o -x assembler-with-cpp $(srcdir)/config/avr32/crtn.asm
+
+
+# Build the libraries for both hard and soft floating point
+EXTRA_MULTILIB_PARTS = crtbegin.o crtbeginS.o crtend.o crtendS.o crti.o crtn.o
+
+LIBGCC = stmp-multilib
+INSTALL_LIBGCC = install-multilib

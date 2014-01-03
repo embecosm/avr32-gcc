@@ -121,6 +121,24 @@ max_operand_vec (rtx insn, int arg)
 }
 
 static void
+gen_vararg_prologue(int operands)
+{
+  int i;
+
+  if (operands > 1)
+    {
+      for (i = 1; i < operands; i++)
+	printf("  rtx operand%d ATTRIBUTE_UNUSED;\n", i);
+
+      printf("  va_list args;\n\n");
+      printf("  va_start(args, operand0);\n");
+      for (i = 1; i < operands; i++)
+	printf("  operand%d = va_arg(args, rtx);\n", i);
+      printf("  va_end(args);\n\n");
+    }
+}
+
+static void
 print_code (RTX_CODE code)
 {
   const char *p1;
@@ -406,17 +424,15 @@ gen_insn (rtx insn, int lineno)
     fatal ("match_dup operand number has no match_operand");
 
   /* Output the function name and argument declarations.  */
-  printf ("rtx\ngen_%s (", XSTR (insn, 0));
+  printf ("rtx\ngen_%s ", XSTR (insn, 0));
+
   if (operands)
-    for (i = 0; i < operands; i++)
-      if (i)
-	printf (",\n\trtx operand%d ATTRIBUTE_UNUSED", i);
+    printf("(rtx operand0 ATTRIBUTE_UNUSED, ...)\n");
       else
-	printf ("rtx operand%d ATTRIBUTE_UNUSED", i);
-  else
-    printf ("void");
-  printf (")\n");
+    printf("(void)\n");
   printf ("{\n");
+
+  gen_vararg_prologue(operands);
 
   /* Output code to construct and return the rtl for the instruction body.  */
 
@@ -461,16 +477,12 @@ gen_expand (rtx expand)
   operands = max_operand_vec (expand, 1);
 
   /* Output the function name and argument declarations.  */
-  printf ("rtx\ngen_%s (", XSTR (expand, 0));
+  printf ("rtx\ngen_%s ", XSTR (expand, 0));
   if (operands)
-    for (i = 0; i < operands; i++)
-      if (i)
-	printf (",\n\trtx operand%d", i);
-      else
-	printf ("rtx operand%d", i);
+    printf("(rtx operand0 ATTRIBUTE_UNUSED, ...)\n");
   else
-    printf ("void");
-  printf (")\n");
+    printf("(void)\n");
+
   printf ("{\n");
 
   /* If we don't have any C code to write, only one insn is being written,
@@ -480,6 +492,8 @@ gen_expand (rtx expand)
       && operands > max_dup_opno
       && XVECLEN (expand, 1) == 1)
     {
+      gen_vararg_prologue(operands);
+
       printf ("  return ");
       gen_exp (XVECEXP (expand, 1, 0), DEFINE_EXPAND, NULL);
       printf (";\n}\n\n");
@@ -493,6 +507,7 @@ gen_expand (rtx expand)
   for (; i <= max_scratch_opno; i++)
     printf ("  rtx operand%d ATTRIBUTE_UNUSED;\n", i);
   printf ("  rtx _val = 0;\n");
+  gen_vararg_prologue(operands);
   printf ("  start_sequence ();\n");
 
   /* The fourth operand of DEFINE_EXPAND is some code to be executed

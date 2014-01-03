@@ -603,7 +603,7 @@ extern enum insn_code reload_out_optab[NUM_MACHINE_MODES];
 extern optab code_to_optab[NUM_RTX_CODE + 1];
 
 
-typedef rtx (*rtxfun) (rtx);
+typedef rtx (*rtxfun) (rtx, ...);
 
 /* Indexed by the rtx-code for a conditional (e.g. EQ, LT,...)
    gives the gen_function to make a branch to test that condition.  */

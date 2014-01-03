@@ -127,7 +127,6 @@ static void
 gen_proto (rtx insn)
 {
   int num = num_operands (insn);
-  int i;
   const char *name = XSTR (insn, 0);
   int truth = maybe_eval_c_test (XSTR (insn, 2));
 
@@ -158,12 +157,7 @@ gen_proto (rtx insn)
   if (num == 0)
     fputs ("void", stdout);
   else
-    {
-      for (i = 1; i < num; i++)
-	fputs ("rtx, ", stdout);
-
-      fputs ("rtx", stdout);
-    }
+    fputs("rtx, ...", stdout);
 
   puts (");");
 
@@ -173,12 +167,7 @@ gen_proto (rtx insn)
     {
       printf ("static inline rtx\ngen_%s", name);
       if (num > 0)
-	{
-	  putchar ('(');
-	  for (i = 0; i < num-1; i++)
-	    printf ("rtx ARG_UNUSED (%c), ", 'a' + i);
-	  printf ("rtx ARG_UNUSED (%c))\n", 'a' + i);
-	}
+	puts("(rtx ARG_UNUSED(a), ...)");
       else
 	puts ("(void)");
       puts ("{\n  return 0;\n}");

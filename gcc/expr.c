@@ -52,6 +52,7 @@ along with GCC; see the file COPYING3.  If not see
 #include "tree-flow.h"
 #include "target.h"
 #include "timevar.h"
+#include "c-common.h"
 #include "df.h"
 #include "diagnostic.h"
 
@@ -3647,16 +3648,17 @@ emit_single_push_insn (enum machine_mode mode, rtx x, tree type)
     }
   else
     {
+      emit_move_insn (stack_pointer_rtx,
+		      expand_binop (Pmode,
 #ifdef STACK_GROWS_DOWNWARD
-      /* ??? This seems wrong if STACK_PUSH_CODE == POST_DEC.  */
-      dest_addr = gen_rtx_PLUS (Pmode, stack_pointer_rtx,
-				GEN_INT (-(HOST_WIDE_INT) rounded_size));
+				    sub_optab,
 #else
-      /* ??? This seems wrong if STACK_PUSH_CODE == POST_INC.  */
-      dest_addr = gen_rtx_PLUS (Pmode, stack_pointer_rtx,
-				GEN_INT (rounded_size));
+				    add_optab,
 #endif
-      dest_addr = gen_rtx_PRE_MODIFY (Pmode, stack_pointer_rtx, dest_addr);
+				    stack_pointer_rtx,
+				    GEN_INT (rounded_size),
+				    NULL_RTX, 0, OPTAB_LIB_WIDEN));
+      dest_addr = stack_pointer_rtx;
     }
 
   dest = gen_rtx_MEM (mode, dest_addr);
@@ -5775,7 +5777,8 @@ store_field (rtx target, HOST_WIDE_INT bitsize, HOST_WIDE_INT bitpos,
      is a bit field, we cannot use addressing to access it.
      Use bit-field techniques or SUBREG to store in it.  */
 
-  if (mode == VOIDmode
+  if (
+      mode == VOIDmode
       || (mode != BLKmode && ! direct_store[(int) mode]
 	  && GET_MODE_CLASS (mode) != MODE_COMPLEX_INT
 	  && GET_MODE_CLASS (mode) != MODE_COMPLEX_FLOAT)
@@ -5932,7 +5935,18 @@ get_inner_reference (tree exp, HOST_WIDE_INT *pbitsize,
     {
       tree field = TREE_OPERAND (exp, 1);
       size_tree = DECL_SIZE (field);
-      if (!DECL_BIT_FIELD (field))
+      if (!DECL_BIT_FIELD (field)
+          /* Added for AVR32:
+             Bitfields with a size equal to a target storage
+             type might not cause DECL_BIT_FIELD to return
+             true since it can be optimized into a normal array
+             access operation. But for volatile bitfields we do
+             not allow this when targetm.narrow_volatile_bitfield ()
+             is false. We can use DECL_C_BIT_FIELD to check if this
+             really is a c-bitfield. */ 
+          && !(TREE_THIS_VOLATILE (exp)
+               && !targetm.narrow_volatile_bitfield ()
+               && DECL_C_BIT_FIELD (field)) )
 	mode = DECL_MODE (field);
       else if (DECL_MODE (field) == BLKmode)
 	blkmode_bitfield = true;
@@ -7915,7 +7929,8 @@ expand_expr_real_1 (tree exp, rtx target, enum machine_mode tmode,
 	   by doing the extract into an object as wide as the field
 	   (which we know to be the width of a basic mode), then
 	   storing into memory, and changing the mode to BLKmode.  */
-	if (mode1 == VOIDmode
+       if (      
+            mode1 == VOIDmode
 	    || REG_P (op0) || GET_CODE (op0) == SUBREG
 	    || (mode1 != BLKmode && ! direct_load[(int) mode1]
 		&& GET_MODE_CLASS (mode) != MODE_COMPLEX_INT

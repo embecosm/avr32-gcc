@@ -1,0 +1,12 @@
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
+	AVR32 patch 30-gcc-avr32
+
+	* acinclude.m4: Patches for AVR32.
+	* config/os/gnu-linux/ctype_base.h: Patches for AVR32.
+	* include/Makefile.in: Patches for AVR32.
+	* libsupc++/Makefile.in: Patches for AVR32.
+	* Makefile.in: Patches for AVR32.
+	* po/Makefile.in: Patches for AVR32.
+	* src/Makefile.in: Patches for AVR32.
+

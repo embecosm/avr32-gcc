@@ -84,7 +84,7 @@ static int num_possible_if_blocks;
 static int num_updated_if_blocks;
 
 /* # of changes made.  */
-static int num_true_changes;
+int num_true_changes;
 
 /* Whether conditional execution changes were made.  */
 static int cond_exec_changed_p;
@@ -290,6 +290,9 @@ cond_exec_process_insns (ce_if_block_t *ce_info ATTRIBUTE_UNUSED,
       if (must_be_last)
 	return FALSE;
 
+#ifdef IFCVT_ALLOW_MODIFY_TEST_IN_INSN       
+      if ( !IFCVT_ALLOW_MODIFY_TEST_IN_INSN )
+#endif
       if (modified_in_p (test, insn))
 	{
 	  if (!mod_ok)
@@ -570,15 +573,18 @@ cond_exec_process_if_block (ce_if_block_t * ce_info,
   IFCVT_MODIFY_FINAL (ce_info);
 #endif
 
+  /* Merge the blocks!  */
+  if ( reload_completed ){
   /* Conversion succeeded.  */
   if (dump_file)
     fprintf (dump_file, "%d insn%s converted to conditional execution.\n",
 	     n_insns, (n_insns == 1) ? " was" : "s were");
 
-  /* Merge the blocks!  */
   merge_if_block (ce_info);
   cond_exec_changed_p = TRUE;
   return TRUE;
+  }
+  return FALSE;
 
  fail:
 #ifdef IFCVT_MODIFY_CANCEL
@@ -1087,7 +1093,11 @@ noce_try_addcc (struct noce_if_info *if_info)
 	  != UNKNOWN))
     {
       rtx cond = if_info->cond;
-      enum rtx_code code = reversed_comparison_code (cond, if_info->jump);
+      /* This generates wrong code for AVR32. The cond code need not be reversed
+         since the addmodecc patterns add if the condition is NOT met. */
+      /*   enum rtx_code code = reversed_comparison_code (cond, if_info->jump);*/
+      enum rtx_code code = GET_CODE(cond);
+
 
       /* First try to use addcc pattern.  */
       if (general_operand (XEXP (cond, 0), VOIDmode)
@@ -3039,7 +3049,12 @@ find_if_header (basic_block test_bb, int pass)
       && noce_find_if_block (test_bb, then_edge, else_edge, pass))
     goto success;
 
-  if (HAVE_conditional_execution && reload_completed
+  if (HAVE_conditional_execution && 
+#ifdef IFCVT_COND_EXEC_BEFORE_RELOAD
+      (reload_completed || IFCVT_COND_EXEC_BEFORE_RELOAD)
+#else
+      reload_completed
+#endif
       && cond_exec_find_if_block (&ce_info))
     goto success;
 
@@ -3154,7 +3169,11 @@ cond_exec_find_if_block (struct ce_if_block * ce_info)
 
   /* We only ever should get here after reload,
      and only if we have conditional execution.  */
+#ifdef IFCVT_COND_EXEC_BEFORE_RELOAD
+  gcc_assert (HAVE_conditional_execution && (reload_completed||IFCVT_COND_EXEC_BEFORE_RELOAD));
+#else
   gcc_assert (HAVE_conditional_execution && reload_completed);
+#endif
 
   /* Discover if any fall through predecessors of the current test basic block
      were && tests (which jump to the else block) or || tests (which jump to
@@ -4259,6 +4278,14 @@ gate_handle_if_after_reload (void)
 static unsigned int
 rest_of_handle_if_after_reload (void)
 {
+  /* Hack for the AVR32 experimental ifcvt processing before reload.
+     The AVR32 specific ifcvt code needs to know when ifcvt after reload 
+     has begun. */
+#ifdef IFCVT_COND_EXEC_BEFORE_RELOAD
+  if ( IFCVT_COND_EXEC_BEFORE_RELOAD )
+    cfun->machine->ifcvt_after_reload = 1;
+#endif
+  
   if_convert ();
   return 0;
 }

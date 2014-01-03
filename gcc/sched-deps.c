@@ -1473,7 +1473,14 @@ fixup_sched_groups (rtx insn)
 
   prev_nonnote = prev_nonnote_insn (insn);
   if (BLOCK_FOR_INSN (insn) == BLOCK_FOR_INSN (prev_nonnote)
-      && ! sched_insns_conditions_mutex_p (insn, prev_nonnote))
+      /* Modification for AVR32 by RP: Why is this here, this will
+         cause instruction to be without any dependencies which might
+         cause it to be moved anywhere. For the AVR32 we try to keep
+         a group of conditionals together even if they are mutual exclusive.
+      */
+      && (! sched_insns_conditions_mutex_p (insn, prev_nonnote)
+          || GET_CODE (PATTERN (insn)) == COND_EXEC )
+      )
     add_dependence (insn, prev_nonnote, REG_DEP_ANTI);
 }
 
@@ -2230,7 +2237,28 @@ sched_analyze_insn (struct deps *deps, rtx x, rtx insn)
 
   if (code == COND_EXEC)
     {
+#ifdef IFCVT_ALLOW_MODIFY_TEST_IN_INSN
+      if (IFCVT_ALLOW_MODIFY_TEST_IN_INSN)
+        {
+          /* Check if we have a group og conditional instructions with the same test. 
+             If so we must make sure that they are not scheduled apart in order to
+             avoid unnecesarry tests and if one of the registers in the test is modified
+             in the instruction this is needed to ensure correct code. */
+          if ( prev_nonnote_insn (insn)
+               && INSN_P (prev_nonnote_insn (insn))
+               && GET_CODE (PATTERN (prev_nonnote_insn (insn))) == COND_EXEC 
+               && rtx_equal_p (XEXP(COND_EXEC_TEST (PATTERN (prev_nonnote_insn (insn))), 0), XEXP (COND_EXEC_TEST (x), 0))
+               && rtx_equal_p (XEXP(COND_EXEC_TEST (PATTERN (prev_nonnote_insn (insn))), 1), XEXP (COND_EXEC_TEST (x), 1))
+               && ( GET_CODE (COND_EXEC_TEST (PATTERN (prev_nonnote_insn (insn)))) == GET_CODE (COND_EXEC_TEST (x))
+                    || GET_CODE (COND_EXEC_TEST (PATTERN (prev_nonnote_insn (insn)))) == reversed_comparison_code (COND_EXEC_TEST (x), insn)))
+            {
+              SCHED_GROUP_P (insn) = 1;
+              //CANT_MOVE (prev_nonnote_insn (insn)) = 1;
+            }
+        }
+#endif      
       sched_analyze_2 (deps, COND_EXEC_TEST (x), insn);
+
 
       /* ??? Should be recording conditions so we reduce the number of
 	 false dependencies.  */

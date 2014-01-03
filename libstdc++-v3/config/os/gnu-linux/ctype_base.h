@@ -26,6 +26,8 @@
 //
 // ISO C++ 14882: 22.1  Locales
 //
+#include <features.h>
+#include <ctype.h>
   
 /** @file ctype_base.h
  *  This is an internal header file, included by other library headers.
@@ -40,7 +42,11 @@ _GLIBCXX_BEGIN_NAMESPACE(std)
   struct ctype_base
   {
     // Non-standard typedefs.
+#ifdef __UCLIBC__
+    typedef const __ctype_touplow_t*   __to_type;
+#else
     typedef const int* 		__to_type;
+#endif
 
     // NB: Offsets into ctype<char>::_M_table force a particular size
     // on the mask type. Because of this, we don't use an enum.

@@ -1,0 +1,98 @@
+
+MD_INCLUDES= 	$(srcdir)/config/avr32/avr32.md \
+		$(srcdir)/config/avr32/sync.md \
+		$(srcdir)/config/avr32/fpcp.md \
+		$(srcdir)/config/avr32/simd.md \
+        $(srcdir)/config/avr32/predicates.md
+
+s-config s-conditions s-flags s-codes s-constants s-emit s-recog s-preds \
+	s-opinit s-extract s-peep s-attr s-attrtab s-output: $(MD_INCLUDES)
+
+# We want fine grained libraries, so use the new code
+# to build the floating point emulation libraries.
+FPBIT = fp-bit.c
+DPBIT = dp-bit.c
+
+LIB1ASMSRC = avr32/lib1funcs.S
+LIB1ASMFUNCS =  _avr32_f64_mul _avr32_f64_mul_fast _avr32_f64_addsub _avr32_f64_addsub_fast  _avr32_f64_to_u32 \
+                _avr32_f64_to_s32 _avr32_f64_to_u64 _avr32_f64_to_s64 _avr32_u32_to_f64 \
+                _avr32_s32_to_f64 _avr32_f64_cmp_eq _avr32_f64_cmp_ge _avr32_f64_cmp_lt \
+                _avr32_f32_cmp_eq _avr32_f32_cmp_ge _avr32_f32_cmp_lt _avr32_f64_div _avr32_f64_div_fast \
+                _avr32_f32_div _avr32_f32_div_fast _avr32_f32_addsub _avr32_f32_addsub_fast \
+                _avr32_f32_mul _avr32_s32_to_f32 _avr32_u32_to_f32 _avr32_f32_to_s32 \
+                _avr32_f32_to_u32 _avr32_f32_to_f64 _avr32_f64_to_f32 _mulsi3
+
+#LIB2FUNCS_EXTRA += $(srcdir)/config/avr32/lib2funcs.S
+
+MULTILIB_OPTIONS     = march=ap/march=ucr1/march=ucr2/march=ucr2nomul/march=ucr3
+MULTILIB_DIRNAMES    = ap ucr1 ucr2 ucr2nomul ucr3
+MULTILIB_EXCEPTIONS  =
+MULTILIB_MATCHES     += march?ap=mpart?ap7000
+MULTILIB_MATCHES     += march?ap=mpart?ap7001
+MULTILIB_MATCHES     += march?ap=mpart?ap7002
+MULTILIB_MATCHES     += march?ap=mpart?ap7200
+MULTILIB_MATCHES     += march?ucr1=march?uc
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3a0512es
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a0128
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a0256
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a0512
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a1128
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a1256
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3a1512es
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a1512
+MULTILIB_MATCHES     += march?ucr2nomul=mpart?uc3a3revd
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a364
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a364s
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a3128
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a3128s
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a3256
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3a3256s
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3b064
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3b0128
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3b0256es
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3b0256
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3b0512
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3b0512revc
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3b164
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3b1128
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3b1256es
+MULTILIB_MATCHES     += march?ucr1=mpart?uc3b1256
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3b1512
+MULTILIB_MATCHES     += march?ucr2=mpart?uc3b1512revc
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c0512crevc
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c0256c
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c0128c
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c064c
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c1512crevc
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c1256c
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c1128c
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c164c
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c2512crevc
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c2256c
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c2128c
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3c264c
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3l0256
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3l032
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3l016
+MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064revb
+
+
+EXTRA_MULTILIB_PARTS = crtbegin.o crtbeginS.o crtend.o crtendS.o crti.o crtn.o
+
+CRTSTUFF_T_CFLAGS = -mrelax
+CRTSTUFF_T_CFLAGS_S = -mrelax -fPIC
+TARGET_LIBGCC2_CFLAGS += -mrelax
+
+LIBGCC = stmp-multilib
+INSTALL_LIBGCC = install-multilib
+
+fp-bit.c: $(srcdir)/config/fp-bit.c
+	echo '#define FLOAT' > fp-bit.c
+	cat $(srcdir)/config/fp-bit.c >> fp-bit.c
+
+dp-bit.c: $(srcdir)/config/fp-bit.c
+	cat $(srcdir)/config/fp-bit.c > dp-bit.c
+
+
+
