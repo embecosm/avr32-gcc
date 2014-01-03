@@ -1,3 +1,7 @@
+2014-01-03  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
+	* configure: Regenerated for AVR32.
+
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
 	AVR32 patch 30-gcc-avr32
