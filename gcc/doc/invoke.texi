@@ -9438,6 +9438,7 @@ Generate code for the specified part. Permissible parts are:
 @samp{uc64l4u},
 @samp{uc128l4u},
 @samp{uc256l4u},
+@samp{uc128l5},
 @samp{uc3c064c},
 @samp{uc3c0128c},
 @samp{uc3c0256c},

@@ -1,5 +1,15 @@
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
+	AVR32 patch 58-gcc-avr32-uc128l5
+
+	* config/avr32/avr32.c: Patches for AVR32.
+	* config/avr32/avr32.h: Patches for AVR32.
+	* config/avr32/t-avr32: Patches for AVR32.
+	* config/avr32/t-avr32-linux: Patches for AVR32.
+	* doc/invoke.texi: Patches for AVR32.
+
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
 	AVR32 patch 57-gcc-avr32-mxt540e
 
 	* config/avr32/avr32.c: Patches for AVR32.

@@ -154,6 +154,7 @@ static const struct part_type_s avr32_part_types[] = {
   {"uc64l4u",         PART_TYPE_AVR32_UC64L4U,         ARCH_TYPE_AVR32_UCR3,      "__AVR32_UC64L4U__"},
   {"uc128l4u",        PART_TYPE_AVR32_UC128L4U,        ARCH_TYPE_AVR32_UCR3,      "__AVR32_UC128L4U__"},
   {"uc256l4u",        PART_TYPE_AVR32_UC256L4U,        ARCH_TYPE_AVR32_UCR3,      "__AVR32_UC256L4U__"},
+  {"uc128l5",	       PART_TYPE_AVR32_UC128L5,         ARCH_TYPE_AVR32_UCR3,	   "__AVR32_UC128L5__"},
   {"uc3c064c",        PART_TYPE_AVR32_UC3C064C,        ARCH_TYPE_AVR32_UCR3FP,    "__AVR32_UC3C064C__"},
   {"uc3c0128c",       PART_TYPE_AVR32_UC3C0128C,       ARCH_TYPE_AVR32_UCR3FP,    "__AVR32_UC3C0128C__"},
   {"uc3c0256c",       PART_TYPE_AVR32_UC3C0256C,       ARCH_TYPE_AVR32_UCR3FP,    "__AVR32_UC3C0256C__"},
