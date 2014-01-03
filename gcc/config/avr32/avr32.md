@@ -95,6 +95,11 @@
    (VUNSPEC_CSRF                      28)
    (VUNSPEC_SSRF                      29)
    (VUNSPEC_SLEEP                     30)
+   (VUNSPEC_DELAY_CYCLES              31)
+   (VUNSPEC_DELAY_CYCLES_1            32)
+   (VUNSPEC_DELAY_CYCLES_2            33)
+   (VUNSPEC_NOP		       34)
+   (VUNSPEC_NOP3		       35)
    ])
 
 (define_constants
@@ -3292,19 +3297,6 @@
   [(set_attr "type" "call")])
   
 ;;=============================================================================
-;; nop
-;;-----------------------------------------------------------------------------
-;; No-op instruction.
-;;=============================================================================
-(define_insn "nop"
-  [(const_int 0)]
-  ""
-  "nop"
-  [(set_attr "length" "2")
-   (set_attr "type" "alu")
-   (set_attr "cc" "none")])
-
-;;=============================================================================
 ;; nonlocal_goto_receiver
 ;;-----------------------------------------------------------------------------
 ;; For targets with a return stack we must make sure to flush the return stack
@@ -3905,6 +3897,92 @@
    (set_attr "cc"  "none")
   ])
 
+(define_expand "delay_cycles"
+  [(unspec_volatile [(match_operand:SI 0 "const_int_operand" "i")]
+                    VUNSPEC_DELAY_CYCLES)]
+  ""
+  "
+  unsigned int cycles = UINTVAL (operands[0]);
+  if (IN_RANGE(cycles,0x10000 ,0xFFFFFFFF))
+   {
+     unsigned int msb = (cycles & 0xFFFF0000);
+     unsigned int shift = 16;
+     msb = (msb >> shift);
+     unsigned int cycles_used = (msb*0x10000);
+     emit_insn (gen_delay_cycles_2 (gen_int_mode (msb, SImode)));
+     cycles -= cycles_used;
+   }
+  if (IN_RANGE(cycles, 4, 0xFFFF))
+   {
+     unsigned int loop_count = (cycles/ 4);
+     unsigned int cycles_used = (loop_count*4);
+     emit_insn (gen_delay_cycles_1 (gen_int_mode (loop_count, SImode)));
+     cycles -= cycles_used;
+   }
+  while (cycles >= 3)
+    {
+      emit_insn (gen_nop3 ());
+      cycles -= 3;
+    }
+  if (cycles == 1 || cycles == 2)
+    {
+      while (cycles--)
+        emit_insn (gen_nop ());
+    }
+  DONE;
+  ")
+
+(define_insn "delay_cycles_1"
+[(unspec_volatile [(const_int 0)] VUNSPEC_DELAY_CYCLES_1)
+  (match_operand:SI 0 "immediate_operand" "")
+  (clobber (match_scratch:SI 1 "=&r"))]
+  ""
+  "mov\t%1, %0
+    1:  sub\t%1, 1
+        brne\t1b
+        nop"
+)
+
+(define_insn "delay_cycles_2"
+[(unspec_volatile [(const_int 0)] VUNSPEC_DELAY_CYCLES_2)
+  (match_operand:SI 0 "immediate_operand" "")
+  (clobber (match_scratch:SI 1 "=&r"))
+  (clobber (match_scratch:SI 2 "=&r"))]
+  ""
+  "mov\t%1, %0
+    1:  mov\t%2, 16383 
+    2:  sub\t%2, 1	
+        brne\t2b
+        nop
+        sub\t%1, 1
+        brne\t1b
+        nop"
+)
+
+;; CPU instructions
+
+;;=============================================================================
+;; nop
+;;-----------------------------------------------------------------------------
+;; No-op instruction.
+;;=============================================================================
+(define_insn "nop"
+  [(unspec_volatile [(const_int 0)] VUNSPEC_NOP)]
+  ""
+  "nop"
+  [(set_attr "length" "1")
+   (set_attr "type" "alu")
+  (set_attr "cc" "none")])
+
+;; NOP3
+(define_insn "nop3"
+  [(unspec_volatile [(const_int 0)] VUNSPEC_NOP3)]
+  ""
+  "rjmp\t2"
+  [(set_attr "length" "3")
+   (set_attr "type" "alu")
+  (set_attr "cc" "none")])
+
 ;; Special patterns for dealing with the constant pool
 
 (define_insn "align_4"
@@ -3916,6 +3994,7 @@
   }
   [(set_attr "length" "2")]
 )
+
 
 (define_insn "consttable_start"
   [(unspec_volatile [(const_int 0)] VUNSPEC_POOL_START)]

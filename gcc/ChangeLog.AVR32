@@ -1,5 +1,13 @@
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
+	AVR32 patch 35-gcc-avr32-delay-cycles
+
+	* config/avr32/avr32.c: Patches for AVR32.
+	* config/avr32/avr32.h: Patches for AVR32.
+	* config/avr32/avr32.md: Patches for AVR32.
+
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
 	AVR32 patch 34-gcc-avr32-fpu
 
 	* config/avr32/avr32.c: Patches for AVR32.

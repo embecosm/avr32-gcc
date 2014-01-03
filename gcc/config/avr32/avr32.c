@@ -863,7 +863,7 @@ avr32_vector_mode_supported (enum machine_mode mode)
 
 tree int_ftype_int, int_ftype_void, short_ftype_short, void_ftype_int_int,
   void_ftype_ptr_int;
-tree void_ftype_int, void_ftype_void, int_ftype_ptr_int;
+tree void_ftype_int, void_ftype_ulong, void_ftype_void, int_ftype_ptr_int;
 tree short_ftype_short, int_ftype_int_short, int_ftype_short_short,
   short_ftype_short_short;
 tree int_ftype_int_int, longlong_ftype_int_short, longlong_ftype_short_short;
@@ -1041,6 +1041,10 @@ avr32_init_builtins (void)
   /* void func (int) */
   void_ftype_int = build_function_type (void_type_node, int_endlink);
 
+  /* void func (ulong) */
+  void_ftype_ulong = build_function_type_list (void_type_node,
+                           long_unsigned_type_node, NULL_TREE);
+
   /* void func (void) */
   void_ftype_void = build_function_type (void_type_node, void_endlink);
 
@@ -1105,6 +1109,7 @@ avr32_init_builtins (void)
   def_builtin ("__builtin_memt", void_ftype_ptr_int, AVR32_BUILTIN_MEMT);
   def_builtin ("__builtin_memc", void_ftype_ptr_int, AVR32_BUILTIN_MEMC);
   def_builtin ("__builtin_sleep", void_ftype_int, AVR32_BUILTIN_SLEEP);
+  def_builtin ("__builtin_avr32_delay_cycles", void_ftype_int, AVR32_BUILTIN_DELAY_CYCLES);
 
   /* Add all builtins that are more or less simple operations on two
      operands.  */
@@ -1915,6 +1920,20 @@ avr32_expand_builtin (tree exp,
  	return target;
  
        }	
+     case AVR32_BUILTIN_DELAY_CYCLES: 
+       {
+       arg0 = CALL_EXPR_ARG (exp, 0);
+       op0 = expand_expr (arg0, NULL_RTX, VOIDmode, 0);
+ 
+       if (TARGET_ARCH_AP)
+         error (" __builtin_avr32_delay_cycles() not supported for \'%s\' architecture.", avr32_arch_name);
+       if (!CONSTANT_P (op0))
+        error ("Parameter 1 to __builtin_avr32_delay_cycles() should be an integer.");
+       emit_insn (gen_delay_cycles (op0));
+       return 0;
+ 
+       }       
+
     }
 
   for (i = 0, d = bdesc_2arg; i < ARRAY_SIZE (bdesc_2arg); i++, d++)
