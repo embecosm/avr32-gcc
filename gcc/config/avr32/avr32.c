@@ -174,6 +174,10 @@ static const struct arch_type_s avr32_arch_types[] = {
    (FLAG_AVR32_HAS_DSP | FLAG_AVR32_HAS_RMW
     | FLAG_AVR32_HAS_V2_INSNS),
    "__AVR32_UC__=3"},
+  {"ucr3fp", ARCH_TYPE_AVR32_UCR3FP, UARCH_TYPE_AVR32A,
+   (FLAG_AVR32_HAS_DSP | FLAG_AVR32_HAS_RMW | FLAG_AVR32_HAS_FPU
+    | FLAG_AVR32_HAS_V2_INSNS),
+   "__AVR32_UC__=3"},
   {NULL, 0, 0, 0, NULL}
 };
 

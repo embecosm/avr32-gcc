@@ -24,8 +24,8 @@ LIB1ASMFUNCS =  _avr32_f64_mul _avr32_f64_mul_fast _avr32_f64_addsub _avr32_f64_
 
 #LIB2FUNCS_EXTRA += $(srcdir)/config/avr32/lib2funcs.S
 
-MULTILIB_OPTIONS     = march=ap/march=ucr1/march=ucr2/march=ucr2nomul/march=ucr3
-MULTILIB_DIRNAMES    = ap ucr1 ucr2 ucr2nomul ucr3
+MULTILIB_OPTIONS     = march=ap/march=ucr1/march=ucr2/march=ucr2nomul/march=ucr3/march=ucr3fp
+MULTILIB_DIRNAMES    = ap ucr1 ucr2 ucr2nomul ucr3 ucr3fp
 MULTILIB_EXCEPTIONS  =
 MULTILIB_MATCHES     += march?ap=mpart?ap7000
 MULTILIB_MATCHES     += march?ap=mpart?ap7001

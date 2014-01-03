@@ -28,7 +28,7 @@
 
 
 ; NB! Keep this in sync with enum architecture_type in avr32.h
-(define_attr "pipeline" "ap,ucr1,ucr2,ucr2nomul,ucr3"
+(define_attr "pipeline" "ap,ucr1,ucr2,ucr2nomul,ucr3,ucr3fp"
   (const (symbol_ref "avr32_arch->arch_type")))
 
 ; Insn length in bytes

@@ -206,6 +206,7 @@ enum architecture_type
   ARCH_TYPE_AVR32_UCR2,
   ARCH_TYPE_AVR32_UCR2NOMUL,
   ARCH_TYPE_AVR32_UCR3,
+  ARCH_TYPE_AVR32_UCR3FP,
   ARCH_TYPE_AVR32_NONE
 };
 
@@ -228,6 +229,9 @@ enum architecture_type
 #define FLAG_AVR32_HAS_V2_INSNS (1 << 7)
 /* Flag specifying that the cpu has buggy mul insns. */
 #define FLAG_AVR32_HAS_NO_MUL_INSNS (1 << 8)
+/* Flag specifying that the device has FPU instructions according 
+   to AVR32002 specifications*/
+#define FLAG_AVR32_HAS_FPU (1 << 9)
 
 /* Structure for holding information about different avr32 CPUs/parts */
 struct part_type_s
@@ -269,6 +273,7 @@ extern const struct arch_type_s *avr32_arch;
 #define TARGET_ARCH_UC (TARGET_ARCH_UCR1 || TARGET_ARCH_UCR2)
 #define TARGET_UARCH_AVR32A (avr32_arch->uarch_type == UARCH_TYPE_AVR32A)
 #define TARGET_UARCH_AVR32B (avr32_arch->uarch_type == UARCH_TYPE_AVR32B)
+#define TARGET_ARCH_FPU (avr32_arch->feature_flags & FLAG_AVR32_HAS_FPU)
 
 #define CAN_DEBUG_WITHOUT_FP
 
