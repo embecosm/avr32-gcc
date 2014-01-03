@@ -77,6 +77,12 @@ MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l032
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l016
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064revb
+MULTILIB_MATCHES     += march?ucr3=mpart?uc64l3u
+MULTILIB_MATCHES     += march?ucr3=mpart?uc128l3u
+MULTILIB_MATCHES     += march?ucr3=mpart?uc256l3u
+MULTILIB_MATCHES     += march?ucr3=mpart?uc64l4u
+MULTILIB_MATCHES     += march?ucr3=mpart?uc128l4u
+MULTILIB_MATCHES     += march?ucr3=mpart?uc256l4u
 MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c064c
 MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c0128c
 MULTILIB_MATCHES     += march?ucr3fp=mpart?uc3c0256c
