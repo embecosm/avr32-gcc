@@ -9451,6 +9451,7 @@ Generate code for the specified part. Permissible parts are:
 @samp{uc3c2128c},
 @samp{uc3c2256c},
 @samp{uc3c2512c},
+@samp{mxt2952t},
 @samp{mxt540e},
 @samp{mxt768e},
 @samp{mxt1664s},
