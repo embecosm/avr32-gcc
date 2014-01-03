@@ -2335,6 +2335,8 @@ rtx avr32_compare_op0 = NULL_RTX;
 rtx avr32_compare_op1 = NULL_RTX;
 rtx avr32_compare_operator = NULL_RTX;
 rtx avr32_acc_cache = NULL_RTX;
+/* type of branch to use */
+enum avr32_cmp_type avr32_branch_type;
 
 
 /*

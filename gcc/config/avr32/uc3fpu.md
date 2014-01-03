@@ -151,6 +151,7 @@
          (match_operand:SF 1 "register_operand" "r")))]
   "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
   {
+        avr32_branch_type = CMP_SF;
    if (!rtx_equal_p(cc_prev_status.mdep.value, SET_SRC(PATTERN (insn))) )
       return "fcmp.s\t%0, %1";
    return "";

@@ -38,6 +38,18 @@
 extern struct rtx_def *avr32_compare_op0;
 extern struct rtx_def *avr32_compare_op1;
 
+/* comparison type */
+enum avr32_cmp_type {
+  CMP_QI,				/* 1 byte ->char */
+  CMP_HI,				/* 2 byte->half word */
+  CMP_SI,				/* four byte->word*/
+  CMP_DI,				/* eight byte->double word */
+  CMP_SF,				/* single precision floats */
+  CMP_MAX				/* max comparison type */
+};
+
+extern enum avr32_cmp_type avr32_branch_type;	/* type of branch to use */
+
 
 extern struct rtx_def *avr32_acc_cache;
 
