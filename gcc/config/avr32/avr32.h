@@ -83,6 +83,10 @@ avr32_current_func_type to call avr32_compute_func_type.
 #define IS_FLASHVAULT(t)       (t & AVR32_FT_FLASHVAULT)
 #define IS_FLASHVAULT_IMPL(t)  (t & AVR32_FT_FLASHVAULT_IMPL)
 
+#define SYMBOL_FLAG_RMW_ADDR_SHIFT    SYMBOL_FLAG_MACH_DEP_SHIFT
+#define SYMBOL_REF_RMW_ADDR(RTX)                                        \
+  ((SYMBOL_REF_FLAGS (RTX) & (1 << SYMBOL_FLAG_RMW_ADDR_SHIFT)) != 0)
+
 
 typedef struct minipool_labels
 GTY ((chain_next ("%h.next"), chain_prev ("%h.prev")))
@@ -1260,8 +1264,7 @@ in the reload pass.
 #define CONSTRAINT_LEN(C, STR)				\
   ( ((C) == 'K' || (C) == 'I') ?  4 :			\
     ((C) == 'R') ?  5 :					\
-    ((C) == 'N' || (C) == 'O' ||			\
-     (C) == 'P' || (C) == 'L') ? -1 :	\
+    ((C) == 'P') ? -1 :                                 \
     DEFAULT_CONSTRAINT_LEN((C), (STR)) )
 
 #define CONST_OK_FOR_CONSTRAINT_P(VALUE, C, STR)	\
@@ -1315,11 +1318,15 @@ does not include r0 on the output.
    (C) == 'T' ? avr32_const_pool_ref_operand(OP, GET_MODE(OP)) :	\
    (C) == 'U' ? SYMBOL_REF_RCALL_FUNCTION_P(OP) :			\
    (C) == 'Z' ? avr32_cop_memory_operand(OP, GET_MODE(OP)) :		\
+   (C) == 'Q' ? avr32_non_rmw_memory_operand(OP, GET_MODE(OP)) :		\
+   (C) == 'Y' ? avr32_rmw_memory_operand(OP, GET_MODE(OP)) :            \
    0)
 
 
 #define EXTRA_MEMORY_CONSTRAINT(C, STR) ( ((C) == 'R') ||               \
+                                          ((C) == 'Q') ||               \
                                           ((C) == 'S') ||               \
+                                          ((C) == 'Y') ||               \
                                           ((C) == 'Z') )
 
 
@@ -3291,7 +3298,10 @@ enum avr32_builtins
   AVR32_BUILTIN_SATS,
   AVR32_BUILTIN_SATU,
   AVR32_BUILTIN_SATRNDS,
-  AVR32_BUILTIN_SATRNDU
+  AVR32_BUILTIN_SATRNDU,
+  AVR32_BUILTIN_MEMS,
+  AVR32_BUILTIN_MEMC,
+  AVR32_BUILTIN_MEMT
 };
 
 

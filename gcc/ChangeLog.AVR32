@@ -1,5 +1,16 @@
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
+	AVR32 patch 31-gcc-avr32-rmw
+
+	* config/avr32/avr32.c: Patches for AVR32.
+	* config/avr32/avr32.h: Patches for AVR32.
+	* config/avr32/avr32.md: Patches for AVR32.
+	* config/avr32/avr32.opt: Patches for AVR32.
+	* config/avr32/predicates.md: Patches for AVR32.
+	* regrename.c: Patches for AVR32.
+
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
 	AVR32 patch 30-gcc-avr32
 
 	* builtins.c: Patches for AVR32.

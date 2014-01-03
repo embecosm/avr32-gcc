@@ -315,13 +315,13 @@
 
 ;; True if this is a valid avr32 symbol operand.
 (define_predicate "avr32_symbol_operand"
-  (ior (match_code "label_ref, symbol_ref")
-       (and (match_code "const")
-            (match_test "avr32_find_symbol(op)"))))
+   (and (match_code "label_ref, symbol_ref, const")
+        (match_test "avr32_find_symbol(op)")))
 
 ;; True if this is a valid operand for the lda.w and call pseudo insns.
 (define_predicate "avr32_address_operand"
-  (and (match_code "label_ref, symbol_ref")
+   (and (and (match_code "label_ref, symbol_ref")
+             (match_test "avr32_find_symbol(op)"))
        (ior (match_test "TARGET_HAS_ASM_ADDR_PSEUDOS")
             (match_test "flag_pic")) ))
 
@@ -384,3 +384,36 @@
 (define_predicate "avr32_mov_immediate_operand"
   (and (match_operand 0 "immediate_operand")
        (match_test "avr32_const_ok_for_move(INTVAL(op))")))
+
+
+(define_predicate "avr32_rmw_address_operand"
+  (ior (and (match_code "symbol_ref") 
+            (match_test "({rtx symbol = avr32_find_symbol(op); \
+                               symbol && (GET_CODE (symbol) == SYMBOL_REF) && SYMBOL_REF_RMW_ADDR(symbol);})"))
+       (and (match_operand 0 "immediate_operand")
+            (match_test "CONST_OK_FOR_CONSTRAINT_P(INTVAL(op), 'K', \"Ks17\")")))
+  {
+     return TARGET_RMW && !flag_pic;
+  }
+)
+ 
+(define_predicate "avr32_rmw_memory_operand"
+  (and (match_code "mem") 
+       (match_test "!volatile_refs_p(op) && (GET_MODE(op) == SImode) && 
+                    avr32_rmw_address_operand(XEXP(op, 0), GET_MODE(XEXP(op, 0)))")))
+
+(define_predicate "avr32_rmw_memory_or_register_operand"
+  (ior (match_operand 0 "avr32_rmw_memory_operand")
+       (match_operand 0 "register_operand")))
+
+(define_predicate "avr32_non_rmw_memory_operand"
+  (and (not (match_operand 0 "avr32_rmw_memory_operand"))
+       (match_operand 0 "memory_operand")))
+
+(define_predicate "avr32_non_rmw_general_operand"
+  (and (not (match_operand 0 "avr32_rmw_memory_operand"))
+       (match_operand 0 "general_operand")))
+
+(define_predicate "avr32_non_rmw_nonimmediate_operand"
+  (and (not (match_operand 0 "avr32_rmw_memory_operand"))
+       (match_operand 0 "nonimmediate_operand")))

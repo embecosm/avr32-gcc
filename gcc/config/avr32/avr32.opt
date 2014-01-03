@@ -79,6 +79,11 @@ mcond-exec-before-reload
 Target Report Undocumented Mask(COND_EXEC_BEFORE_RELOAD) 
 Enable experimental conditional execution preparation before the reload stage. 
 
+mrmw-addressable-data
+Target Report Mask(RMW_ADDRESSABLE_DATA)
+Signal that all data is in range for the Atomic Read-Modify-Write memory instructions, and that
+gcc can safely generate these whenever possible. 
+
 mflashvault
 Target Var(TARGET_FLASHVAULT)
 Generate code for flashvault

@@ -1582,6 +1582,9 @@ copyprop_hardreg_forward_1 (basic_block bb, struct value_data *vd)
   bool changed = false;
   rtx insn;
 
+  rtx prev_pred_test;
+  int prev_pred_insn_skipped = 0;
+
   for (insn = BB_HEAD (bb); ; insn = NEXT_INSN (insn))
     {
       int n_ops, i, alt, predicated;
@@ -1621,6 +1624,58 @@ copyprop_hardreg_forward_1 (basic_block bb, struct value_data *vd)
 	    recog_data.operand_type[i] = OP_INOUT;
 	}
 
+
+      /* Added for targets (AVR32) which supports test operands to be modified
+         in cond_exec instruction. For these targets we cannot make a change to
+         the test operands if one of the test operands is an output operand This beacuse
+         changing the test operands might cause the need for inserting a new test
+         insns in the middle of a sequence of cond_exec insns and if the test operands
+         are modified these tests will fail.
+      */
+      if ( IFCVT_ALLOW_MODIFY_TEST_IN_INSN
+           && predicated )
+        { 
+          int insn_skipped = 0;
+          rtx test = COND_EXEC_TEST (PATTERN (insn));
+
+          /* Check if the previous insn was a skipped predicated insn with the same
+             test as this predicated insns. If so we cannot do any modification to
+             this insn either since we cannot emit the test insn because the operands
+             are clobbered. */
+          if ( prev_pred_insn_skipped 
+               && (rtx_equal_p (test, prev_pred_test) 
+                   || rtx_equal_p (test, reversed_condition (prev_pred_test))) )
+            { 
+              insn_skipped = 1;
+            }
+          else
+            {
+              /* Check if the output operand is used in the test expression. */
+              for (i = 0; i < n_ops; ++i)
+                if ( recog_data.operand_type[i] == OP_INOUT 
+                     && reg_mentioned_p (recog_data.operand[i], test) )
+                  {
+                    insn_skipped = 1;
+                    break;
+                  }
+              
+            }
+          
+          prev_pred_test = test;
+          prev_pred_insn_skipped = insn_skipped;
+          if ( insn_skipped )
+            {
+              if (insn == BB_END (bb))
+                break;
+              else
+                continue;
+            }
+        } 
+      else 
+        {
+          prev_pred_insn_skipped = 0;
+        }
+      
       /* For each earlyclobber operand, zap the value data.  */
       for (i = 0; i < n_ops; i++)
 	if (recog_op_alt[i][alt].earlyclobber)

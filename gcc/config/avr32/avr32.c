@@ -297,7 +297,6 @@ avr32_override_options (void)
 
   if (TARGET_NO_PIC)
     flag_pic = 0;
-
   avr32_add_gc_roots ();
 }
 
@@ -381,6 +380,9 @@ need agree with that used by other compilers for a machine.
 #undef TARGET_RETURN_IN_MSB
 #define TARGET_RETURN_IN_MSB avr32_return_in_msb
 
+#undef TARGET_ENCODE_SECTION_INFO
+#define TARGET_ENCODE_SECTION_INFO avr32_encode_section_info
+
 #undef TARGET_ARG_PARTIAL_BYTES
 #define TARGET_ARG_PARTIAL_BYTES avr32_arg_partial_bytes
 
@@ -416,8 +418,24 @@ need agree with that used by other compilers for a machine.
 
 #undef  TARGET_MAX_ANCHOR_OFFSET
 #define TARGET_MAX_ANCHOR_OFFSET ((1 << 15) - 1)
+#undef TARGET_SECONDARY_RELOAD
+#define TARGET_SECONDARY_RELOAD avr32_secondary_reload
 
+enum reg_class
+avr32_secondary_reload (bool in_p, rtx x, enum reg_class class,
+                        enum machine_mode mode, secondary_reload_info *sri)
+{
 
+  if ( avr32_rmw_memory_operand (x, mode) )
+    {
+      if (!in_p)
+        sri->icode = CODE_FOR_reload_out_rmw_memory_operand;
+      else
+        sri->icode = CODE_FOR_reload_in_rmw_memory_operand;
+    }
+  return NO_REGS;
+
+}
 /*
  * Switches to the appropriate section for output of constant pool
  * entry x in mode. You can assume that x is some kind of constant in
@@ -659,6 +677,7 @@ const struct attribute_spec avr32_attribute_table[] = {
   {"interrupt", 0, 1, false, false, false, avr32_handle_isr_attribute},
   {"acall", 0, 1, false, true, true, avr32_handle_acall_attribute},
   {"naked", 0, 0, true, false, false, avr32_handle_fndecl_attribute},
+  {"rmw_addressable", 0, 0, true, false, false, NULL},
   {"flashvault", 0, 1, true, false, false, avr32_handle_fndecl_attribute},
   {"flashvault_impl", 0, 1, true, false, false, avr32_handle_fndecl_attribute},
   {NULL, 0, 0, false, false, false, NULL}
@@ -1078,6 +1097,9 @@ avr32_init_builtins (void)
 	       AVR32_BUILTIN_MACWH_D);
   def_builtin ("__builtin_machh_d", longlong_ftype_longlong_short_short,
 	       AVR32_BUILTIN_MACHH_D);
+  def_builtin ("__builtin_mems", void_ftype_ptr_int, AVR32_BUILTIN_MEMS);
+  def_builtin ("__builtin_memt", void_ftype_ptr_int, AVR32_BUILTIN_MEMT);
+  def_builtin ("__builtin_memc", void_ftype_ptr_int, AVR32_BUILTIN_MEMC);
 
   /* Add all builtins that are more or less simple operations on two
      operands.  */
@@ -1809,6 +1831,56 @@ avr32_expand_builtin (tree exp,
 	return target;
       }
 
+     case AVR32_BUILTIN_MEMS:
+     case AVR32_BUILTIN_MEMC:
+     case AVR32_BUILTIN_MEMT:
+       {
+         if (!TARGET_RMW)
+           error ("Trying to use __builtin_mem(s/c/t) when target does not support RMW insns.");
+         
+         switch (fcode) {
+         case AVR32_BUILTIN_MEMS:
+           icode = CODE_FOR_iorsi3;
+           break;
+         case AVR32_BUILTIN_MEMC:
+           icode = CODE_FOR_andsi3;
+           break;
+         case AVR32_BUILTIN_MEMT:
+           icode = CODE_FOR_xorsi3;
+           break;
+         }
+			arg0 = CALL_EXPR_ARG (exp,0);
+			arg1 = CALL_EXPR_ARG (exp,1);
+         op0 = expand_expr (arg0, NULL_RTX, VOIDmode, 0);
+         if ( GET_CODE (op0) == SYMBOL_REF )
+           // This symbol must be RMW addressable
+           SYMBOL_REF_FLAGS (op0) |= (1 << SYMBOL_FLAG_RMW_ADDR_SHIFT);
+         op0 = gen_rtx_MEM(SImode, op0);
+         op1 = expand_expr (arg1, NULL_RTX, VOIDmode, 0);
+         mode0 = insn_data[icode].operand[1].mode;
+         
+         
+         if (!(*insn_data[icode].operand[1].predicate) (op0, mode0))
+           {
+             error ("Parameter 1 to __builtin_mem(s/c/t) must be a Ks15<<2 address or a rmw addressable symbol.");
+           }
+         
+         if ( !CONST_INT_P (op1)
+              || INTVAL (op1) > 31
+              || INTVAL (op1) < 0 )
+           error ("Parameter 2 to __builtin_mem(s/c/t) must be a constant between 0 and 31.");
+ 
+         if ( fcode == AVR32_BUILTIN_MEMC )
+           op1 = GEN_INT((~(1 << INTVAL(op1)))&0xffffffff);
+         else
+           op1 = GEN_INT((1 << INTVAL(op1))&0xffffffff);
+         pat = GEN_FCN (icode) (op0, op0, op1);
+         if (!pat)
+           return 0;
+         emit_insn (pat);
+         return op0;
+       }
+       
     }
 
   for (i = 0, d = bdesc_2arg; i < ARRAY_SIZE (bdesc_2arg); i++, d++)
@@ -2292,6 +2364,13 @@ avr32_const_ok_for_constraint_p (HOST_WIDE_INT value, char c, const char *str)
       return avr32_mask_upper_bits_operand (GEN_INT (value), VOIDmode);
     case 'J':
       return avr32_hi16_immediate_operand (GEN_INT (value), VOIDmode);
+    case 'O':
+      return one_bit_set_operand (GEN_INT (value), VOIDmode);
+    case 'N':
+      return one_bit_cleared_operand (GEN_INT (value), VOIDmode);
+    case 'L':
+      /* The lower 16-bits are set. */
+      return ((value & 0xffff) == 0xffff) ;
     }
 
   return 0;
@@ -4172,6 +4251,9 @@ avr32_legitimate_address (enum machine_mode mode, rtx x, int strict)
     {
     case REG:
       return avr32_address_register_rtx_p (x, strict);
+    case CONST_INT:
+      return ((mode==SImode) 
+              && CONST_OK_FOR_CONSTRAINT_P(INTVAL(x), 'K', "Ks17"));
     case CONST:
       {
 	rtx label = avr32_find_symbol (x);
@@ -4188,7 +4270,10 @@ avr32_legitimate_address (enum machine_mode mode, rtx x, int strict)
                ||*/
              ((GET_CODE (label) == LABEL_REF)
               && GET_CODE (XEXP (label, 0)) == CODE_LABEL
-              && is_minipool_label (XEXP (label, 0)))))
+    		  && is_minipool_label (XEXP (label, 0)))
+              /*|| ((GET_CODE (label) == SYMBOL_REF) 
+                  && mode == SImode
+                  && SYMBOL_REF_RMW_ADDR(label))*/))
 	  {
 	    return TRUE;
 	  }
@@ -4208,12 +4293,9 @@ avr32_legitimate_address (enum machine_mode mode, rtx x, int strict)
 		 && (symbol_mentioned_p (get_pool_constant (x))
 		     || label_mentioned_p (get_pool_constant (x)))))
 	  return TRUE;
-	/*
-	   A symbol_ref is only legal if it is a function. If all of them are
-	   legal, a pseudo reg that is a constant will be replaced by a
-	   symbol_ref and make illegale code. SYMBOL_REF_FLAG is set by
-	   ENCODE_SECTION_INFO. */
-	else if (SYMBOL_REF_RCALL_FUNCTION_P (x))
+	else if (SYMBOL_REF_RCALL_FUNCTION_P (x)
+                 || (mode == SImode
+                     && SYMBOL_REF_RMW_ADDR (x)))
 	  return TRUE;
 	break;
       }
@@ -4308,9 +4390,8 @@ avr32_legitimate_constant_p (rtx x)
       else
 	return 0;
     case LABEL_REF:
-      return flag_pic || TARGET_HAS_ASM_ADDR_PSEUDOS;
     case SYMBOL_REF:
-      return flag_pic || TARGET_HAS_ASM_ADDR_PSEUDOS;
+      return avr32_find_symbol (x) && (flag_pic || TARGET_HAS_ASM_ADDR_PSEUDOS);
     case CONST:
     case HIGH:
     case CONST_VECTOR:
@@ -4389,17 +4470,25 @@ avr32_return_addr (int count, rtx frame ATTRIBUTE_UNUSED)
 void
 avr32_encode_section_info (tree decl, rtx rtl, int first)
 {
+   default_encode_section_info(decl, rtl, first);
 
-  if (first && DECL_P (decl))
-    {
-      /* Set SYMBOL_REG_FLAG for local functions */
-      if (!TREE_PUBLIC (decl) && TREE_CODE (decl) == FUNCTION_DECL)
-	{
-	  if ((*targetm.binds_local_p) (decl))
-	    {
-	      SYMBOL_REF_FLAG (XEXP (rtl, 0)) = 1;
-	    }
-	}
+   if ( TREE_CODE (decl) == VAR_DECL
+        && (GET_CODE (XEXP (rtl, 0)) == SYMBOL_REF)
+        && (lookup_attribute ("rmw_addressable", DECL_ATTRIBUTES (decl))
+            || TARGET_RMW_ADDRESSABLE_DATA) ){
+     if ( !TARGET_RMW || flag_pic )
+       return;
+     //  {
+     //    warning ("Using RMW addressable data with an arch that does not support RMW instructions.");
+     //    return;
+     //  } 
+     //
+     //if ( flag_pic )
+     //  {
+     //    warning ("Using RMW addressable data with together with -fpic switch. Can not use RMW instruction when compiling with -fpic.");
+     //    return;
+     //  } 
+     SYMBOL_REF_FLAGS (XEXP (rtl, 0)) |= (1 << SYMBOL_FLAG_RMW_ADDR_SHIFT);
   }
 }
 
@@ -5000,6 +5089,19 @@ avr32_print_operand (FILE * stream, rtx x, int code)
               value = bitpos;
             }
             break;
+          case 'z':
+            {
+              /* Set to bit position of first bit cleared in immediate */
+              int i, bitpos = 32;
+              for (i = 0; i < 32; i++)
+                if (!(value & (1 << i)))
+                  {
+                    bitpos = i;
+                    break;
+                  }
+              value = bitpos;
+            }
+            break;
           case 'r':
             {
               /* Reglist 8 */
@@ -5219,6 +5321,9 @@ avr32_print_operand (FILE * stream, rtx x, int code)
 	  fprintf (stream, " + %ld",
 		   INTVAL (XEXP (XEXP (XEXP (x, 0), 0), 1)));
 	  break;
+        case CONST_INT:
+	  avr32_print_operand (stream, XEXP (x, 0), 0);
+          break;
 	default:
 	  error = 1;
 	}

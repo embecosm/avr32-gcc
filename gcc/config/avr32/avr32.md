@@ -451,17 +451,15 @@
   }
 )
 
-
 (define_expand "mov<mode>"
-  [(set (match_operand:MOVM 0 "register_operand" "")
-	(match_operand:MOVM 1 "general_operand" ""))]
+  [(set (match_operand:MOVM 0 "avr32_non_rmw_nonimmediate_operand" "")
+	(match_operand:MOVM 1 "avr32_non_rmw_general_operand" ""))]
   ""
   {
 
     /* One of the ops has to be in a register.  */
     if (GET_CODE (operands[0]) == MEM)
       operands[1] = force_reg (<MODE>mode, operands[1]);
-
 
     /* Check for out of range immediate constants as these may
        occur during reloading, since it seems like reload does
@@ -473,7 +471,19 @@
          && !avr32_const_ok_for_constraint_p(INTVAL(operands[1]), 'K', "Ks21") ){
         operands[1] = force_const_mem(SImode, operands[1]);
     }
+    /* Check for RMW memory operands. They are not allowed for mov operations
+       only the atomic memc/s/t operations */
+    if ( !reload_in_progress
+         && avr32_rmw_memory_operand (operands[0], <MODE>mode) ){
+       operands[0] = copy_rtx (operands[0]);                                                              
+       XEXP(operands[0], 0) = force_reg (<MODE>mode, XEXP(operands[0], 0));
+    }
 
+    if ( !reload_in_progress
+         && avr32_rmw_memory_operand (operands[1], <MODE>mode) ){
+       operands[1] = copy_rtx (operands[1]);                                                              
+      XEXP(operands[1], 0) = force_reg (<MODE>mode, XEXP(operands[1], 0));
+    }
     if ( (flag_pic || TARGET_HAS_ASM_ADDR_PSEUDOS)
          && !avr32_legitimate_pic_operand_p(operands[1]) )
       operands[1] = legitimize_pic_address (operands[1], <MODE>mode,
@@ -484,12 +494,13 @@
   })
 
 
-
 (define_insn "mov<mode>_internal"
-  [(set (match_operand:MOVM 0 "nonimmediate_operand"     "=r,   r,   r,r,r,m,r")
-	(match_operand:MOVM 1 "general_operand"          "rKs08,Ks21,J,n,m,r,W"))]
-  "register_operand (operands[0], <MODE>mode)
-   || register_operand (operands[1], <MODE>mode)"
+  [(set (match_operand:MOVM 0 "avr32_non_rmw_nonimmediate_operand" "=r,   r,   r,r,r,Q,r")
+	(match_operand:MOVM 1 "avr32_non_rmw_general_operand"      "rKs08,Ks21,J,n,Q,r,W"))]
+  "(register_operand (operands[0], <MODE>mode)
+    || register_operand (operands[1], <MODE>mode))
+    && !avr32_rmw_memory_operand (operands[0], <MODE>mode) 
+    && !avr32_rmw_memory_operand (operands[1], <MODE>mode)"
   {
     switch (which_alternative) {
       case 0:
@@ -538,6 +549,27 @@
    (set_attr "cc" "none,none,set_z_if_not_v2,set_z,none,none,clobber")])
 
 
+(define_expand "reload_out_rmw_memory_operand"
+  [(set (match_operand:SI 2 "register_operand" "=r")
+        (match_operand:SI 0 "address_operand" ""))
+   (set (mem:SI (match_dup 2))
+        (match_operand:SI 1 "register_operand" ""))]
+  ""
+  {
+   operands[0] = XEXP(operands[0], 0);
+  }
+)
+
+(define_expand "reload_in_rmw_memory_operand"
+  [(set (match_operand:SI 2 "register_operand" "=r")
+        (match_operand:SI 1 "address_operand" ""))
+   (set (match_operand:SI 0 "register_operand" "")
+        (mem:SI (match_dup 2)))]
+  ""
+  {
+   operands[1] = XEXP(operands[1], 0);
+  }
+)
 
 
 ;; These instructions are for loading constants which cannot be loaded
@@ -914,7 +946,7 @@
 ;;=============================================================================
 (define_insn "ld<mode>_predicable"
   [(set (match_operand:MOVCC 0 "register_operand" "=r")
-	(match_operand:MOVCC 1 "memory_operand" "<MOVCC:pred_mem_constraint>"))]
+	(match_operand:MOVCC 1 "avr32_non_rmw_memory_operand" "<MOVCC:pred_mem_constraint>"))]
   "TARGET_V2_INSNS"
   "ld<MOVCC:load_postfix>%?\t%0, %1"
   [(set_attr "length" "4")
@@ -925,7 +957,7 @@
 
 
 (define_insn "st<mode>_predicable"
-  [(set (match_operand:MOVCC 0 "memory_operand" "=<MOVCC:pred_mem_constraint>")
+  [(set (match_operand:MOVCC 0 "avr32_non_rmw_memory_operand" "=<MOVCC:pred_mem_constraint>")
 	(match_operand:MOVCC 1 "register_operand" "r"))]
   "TARGET_V2_INSNS"
   "st<MOVCC:store_postfix>%?\t%0, %1"
@@ -1237,13 +1269,13 @@
 
 (define_insn "adddi3"
   [(set (match_operand:DI 0 "register_operand" "=r,r")
-	(plus:DI (match_operand:DI 1 "register_operand" "%r,0")
+	(plus:DI (match_operand:DI 1 "register_operand" "%0,r")
 		 (match_operand:DI 2 "register_operand" "r,r")))]
   ""
   "@
-   add     %0, %1, %2\;adc    %m0, %m1, %m2
-   add     %0, %2\;adc    %m0, %m0, %m2"
-  [(set_attr "length" "8,6")
+   add     %0, %2\;adc    %m0, %m0, %m2
+   add     %0, %1, %2\;adc    %m0, %m1, %m2"
+  [(set_attr "length" "6,8")
    (set_attr "type" "alu2")
    (set_attr "cc" "set_vncz")])
 
@@ -1282,17 +1314,14 @@
    (set_attr "cc" "<INTM:alu_cc_attr>")])
 
 (define_insn "*sub<mode>3_mul"
-  [(set (match_operand:INTM 0 "register_operand" "=r,r,r")
-	(minus:INTM (match_operand:INTM 1 "register_operand" "r,0,r")
-                    (mult:INTM (match_operand:INTM 2 "register_operand" "r,r,0")
-                               (match_operand:SI 3 "immediate_operand" "Ku04,Ku04,Ku04" ))))]
+  [(set (match_operand:INTM 0 "register_operand" "=r")
+	(minus:INTM (match_operand:INTM 1 "register_operand" "r")
+                    (mult:INTM (match_operand:INTM 2 "register_operand" "r")
+                               (match_operand:SI 3 "immediate_operand" "Ku04" ))))]
   "(INTVAL(operands[3]) == 0) || (INTVAL(operands[3]) == 2) ||
    (INTVAL(operands[3]) == 4) || (INTVAL(operands[3]) == 8)"
-  "@
-   sub     %0, %1, %2 << %p3
-   sub     %0, %0, %2 << %p3
-   sub     %0, %1, %0 << %p3"
-  [(set_attr "length" "4,4,4")
+  "sub     %0, %1, %2 << %p3"
+  [(set_attr "length" "4")
    (set_attr "cc" "<INTM:alu_cc_attr>")])
 
 (define_insn "*sub<mode>3_lsl"
@@ -1308,13 +1337,13 @@
 
 (define_insn "subdi3"
   [(set (match_operand:DI 0 "register_operand" "=r,r")
-	(minus:DI (match_operand:DI 1 "register_operand" "%r,0")
+	(minus:DI (match_operand:DI 1 "register_operand" "%0,r")
 		 (match_operand:DI 2 "register_operand" "r,r")))]
   ""
   "@
-   sub     %0, %1, %2\;sbc    %m0, %m1, %m2
-   sub     %0, %2\;sbc    %m0, %m0, %m2"
-  [(set_attr "length" "8,6")
+   sub     %0, %2\;sbc    %m0, %m0, %m2
+   sub     %0, %1, %2\;sbc    %m0, %m1, %m2"
+  [(set_attr "length" "6,8")
    (set_attr "type" "alu2")
    (set_attr "cc" "set_vncz")])
 
@@ -1482,7 +1511,7 @@
    (set_attr "length" "4")
    (set_attr "cc" "none")])
 
-(define_insn "mulaccsidi3"
+(define_insn "*mulaccsidi3"
   [(set (match_operand:DI 0 "register_operand" "+r")
 	(plus:DI (mult:DI
 		  (sign_extend:DI (match_operand:SI 1 "register_operand" "%r"))
@@ -1494,7 +1523,7 @@
    (set_attr "length" "4")
    (set_attr "cc" "none")])
 
-(define_insn "umulaccsidi3"
+(define_insn "*umulaccsidi3"
   [(set (match_operand:DI 0 "register_operand" "+r")
 	(plus:DI (mult:DI
 		  (zero_extend:DI (match_operand:SI 1 "register_operand" "%r"))
@@ -1866,56 +1895,24 @@
 
 
 (define_insn "andsi3"
-  [(set (match_operand:SI 0 "register_operand" "=r, r, r, r")
-	(and:SI (match_operand:SI 1 "register_operand" "%0, r, 0, r")
-                (match_operand:SI 2 "nonmemory_operand" "r, M, i, r")))]
+   [(set (match_operand:SI 0 "avr32_rmw_memory_or_register_operand"          "=Y,r,r,r,   r,   r,r,r,r,r")
+ 	(and:SI (match_operand:SI 1 "avr32_rmw_memory_or_register_operand"  "%0,r,0,0,   0,   0,0,0,0,r" )
+ 		(match_operand:SI 2 "nonmemory_operand"                     " N,M,N,Ku16,Ks17,J,L,r,i,r")))]
   ""
-  {
-   switch (which_alternative){
-    case 0:
-         return "and\t%0, %2";
-    case 1:
-        {
-         int i, first_set = -1;
-         /* Search for first bit set in mask */
-         for ( i = 31; i >= 0; --i )
-           if ( INTVAL(operands[2]) & (1 << i) ){
-             first_set = i;
-             break;
-           }
-         operands[2] = gen_rtx_CONST_INT(SImode, first_set + 1);
-         return "bfextu\t%0, %1, 0, %2";
-        }
-    case 2:
-         if ( one_bit_cleared_operand(operands[2], VOIDmode) ){
-             int bitpos;
-             for ( bitpos = 0; bitpos < 32; bitpos++ )
-               if ( !(INTVAL(operands[2]) & (1 << bitpos)) )
-                 break;
-             operands[2] = gen_rtx_CONST_INT(SImode, bitpos);
-             return "cbr\t%0, %2";
-         } else if ( (INTVAL(operands[2]) >= 0) &&
-                     (INTVAL(operands[2]) <= 65535) )
-             return "andl\t%0, %2, COH";
-         else if ( (INTVAL(operands[2]) < 0) &&
-                   (INTVAL(operands[2]) >= -65536 ) )
-             return "andl\t%0, lo(%2)";
-         else if ( ((INTVAL(operands[2]) & 0xffff) == 0xffff) )
-             return "andh\t%0, hi(%2)";
-         else if ( ((INTVAL(operands[2]) & 0xffff) == 0x0) )
-             return "andh\t%0, hi(%2), COH";
-         else
-             return "andh\t%0, hi(%2)\;andl\t%0, lo(%2)";
-    case 3:
-         return "and\t%0, %1, %2";
-    default:
-	 abort();
-    }
-  }
-  
-  [(set_attr "length" "2,4,8,4")
-   (set_attr "cc" "set_z")])
+   "@
+    memc\t%0, %z2
+    bfextu\t%0, %1, 0, %z2
+    cbr\t%0, %z2
+    andl\t%0, %2, COH
+    andl\t%0, lo(%2)
+    andh\t%0, hi(%2), COH
+    andh\t%0, hi(%2)
+    and\t%0, %2
+    andh\t%0, hi(%2)\;andl\t%0, lo(%2)
+    and\t%0, %1, %2"
 
+   [(set_attr "length" "4,4,2,4,4,4,4,2,8,4")
+    (set_attr "cc" "none,set_z,set_z,set_z,set_z,set_z,set_z,set_z,set_z,set_z")])
 
   
 
@@ -1936,37 +1933,21 @@
 ;;=============================================================================
 
 (define_insn "iorsi3"
-  [(set (match_operand:SI 0 "register_operand"          "=r,r,r")
-	(ior:SI (match_operand:SI 1 "register_operand"  "%0,0,r" )
-		(match_operand:SI 2 "nonmemory_operand" "r ,i,r")))]
+  [(set (match_operand:SI 0 "avr32_rmw_memory_or_register_operand"          "=Y,r,r,   r,r,r,r")
+	(ior:SI (match_operand:SI 1 "avr32_rmw_memory_or_register_operand"  "%0,0,0,   0,0,0,r" )
+		(match_operand:SI 2 "nonmemory_operand"                     " O,O,Ku16,J,r,i,r")))]
   ""
-  {
-   switch (which_alternative){
-    case 0:
-         return "or\t%0, %2";
-    case 1:
-         if ( one_bit_set_operand(operands[2], VOIDmode) ){
-             int bitpos;
-             for (bitpos = 0; bitpos < 32; bitpos++)
-               if (INTVAL(operands[2]) & (1 << bitpos))
-                 break;
-             operands[2] = gen_rtx_CONST_INT( SImode, bitpos);
-             return "sbr\t%0, %2";
-         } else if ( (INTVAL(operands[2]) >= 0) &&
-              (INTVAL(operands[2]) <= 65535) )
-             return "orl\t%0, %2";
-         else if ( ((INTVAL(operands[2]) & 0xffff) == 0x0) )
-             return "orh\t%0, hi(%2)";
-         else
-             return "orh\t%0, hi(%2)\;orl\t%0, lo(%2)";
-    case 2:
-         return "or\t%0, %1, %2";
-    default:
-	 abort();
-    }
-  }
-  [(set_attr "length" "2,8,4")
-   (set_attr "cc" "set_z")])
+  "@
+   mems\t%0, %p2
+   sbr\t%0, %p2
+   orl\t%0, %2
+   orh\t%0, hi(%2)
+   or\t%0, %2
+   orh\t%0, hi(%2)\;orl\t%0, lo(%2)
+   or\t%0, %1, %2"
+
+  [(set_attr "length" "4,2,4,4,2,8,4")
+   (set_attr "cc" "none,set_z,set_z,set_z,set_z,set_z,set_z")])
 
 
 (define_insn "iordi3"
@@ -1986,32 +1967,20 @@
 ;;=============================================================================
 
 (define_insn "xorsi3"
-  [(set (match_operand:SI 0 "register_operand" "=r,r,r")
-	(xor:SI (match_operand:SI 1 "register_operand" "0,0,r")
-		(match_operand:SI 2 "nonmemory_operand" "r,i,r")))]
+   [(set (match_operand:SI 0 "avr32_rmw_memory_or_register_operand"          "=Y,r,   r,r,r,r")
+ 	(xor:SI (match_operand:SI 1 "avr32_rmw_memory_or_register_operand"  "%0,0,   0,0,0,r" )
+ 		(match_operand:SI 2 "nonmemory_operand"                     " O,Ku16,J,r,i,r")))]
   ""
-  {
-   switch (which_alternative){
-    case 0:
-         return "eor     %0, %2";
-    case 1:
-         if ( (INTVAL(operands[2]) >= 0) &&
-              (INTVAL(operands[2]) <= 65535) )
-             return "eorl    %0, %2";
-         else if ( ((INTVAL(operands[2]) & 0xffff) == 0x0) )
-             return "eorh    %0, hi(%2)";
-         else
-             return "eorh    %0, hi(%2)\;eorl    %0, lo(%2)";
-    case 2:
-         return "eor     %0, %1, %2";
-    default:
-	 abort();
-    }
-  }
-  
-  [(set_attr "length" "2,8,4")
-   (set_attr "cc" "set_z")])
+   "@
+    memt\t%0, %p2
+    eorl\t%0, %2
+    eorh\t%0, hi(%2)
+    eor\t%0, %2
+    eorh\t%0, hi(%2)\;eorl\t%0, lo(%2)
+    eor\t%0, %1, %2"
 
+   [(set_attr "length" "4,4,4,2,8,4")
+    (set_attr "cc" "none,set_z,set_z,set_z,set_z,set_z")])
 
 (define_insn "xordi3"
   [(set (match_operand:DI 0 "register_operand" "=&r,&r")
@@ -2371,12 +2340,12 @@
 
 (define_insn "one_cmplsi2"
   [(set (match_operand:SI 0 "register_operand" "=r,r")
-	(not:SI (match_operand:SI 1 "register_operand" "r,0")))]
+	(not:SI (match_operand:SI 1 "register_operand" "0,r")))]
   ""
   "@
-   rsub\t%0, %1, -1
-   com\t%0"
-  [(set_attr "length" "4,2")
+   com\t%0
+   rsub\t%0, %1, -1"
+  [(set_attr "length" "2,4")
    (set_attr "cc" "set_z")])
 
 
