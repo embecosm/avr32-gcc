@@ -4143,7 +4143,7 @@ avr32_legitimate_address (enum machine_mode mode, rtx x, int strict)
     case REG:
       return avr32_address_register_rtx_p (x, strict);
     case CONST_INT:
-      return ((mode==SImode) 
+      return ((mode==SImode) && TARGET_RMW_ADDRESSABLE_DATA
               && CONST_OK_FOR_CONSTRAINT_P(INTVAL(x), 'K', "Ks17"));
     case CONST:
       {
