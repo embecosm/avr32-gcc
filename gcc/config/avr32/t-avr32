@@ -1,7 +1,6 @@
 
 MD_INCLUDES= 	$(srcdir)/config/avr32/avr32.md \
 		$(srcdir)/config/avr32/sync.md \
-		$(srcdir)/config/avr32/fpcp.md \
 		$(srcdir)/config/avr32/simd.md \
         $(srcdir)/config/avr32/predicates.md
 

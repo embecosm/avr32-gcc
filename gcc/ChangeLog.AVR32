@@ -1,5 +1,19 @@
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
+	AVR32 patch 34-gcc-avr32-fpu
+
+	* config/avr32/avr32.c: Patches for AVR32.
+	* config/avr32/avr32.h: Patches for AVR32.
+	* config/avr32/avr32.md: Patches for AVR32.
+	* config/avr32/avr32-protos.h: Patches for AVR32.
+	* config/avr32/fpcp.md: Patches for AVR32.
+	* config/avr32/predicates.md: Patches for AVR32.
+	* config/avr32/t-avr32: Patches for AVR32.
+	* config/avr32/t-avr32-linux: Patches for AVR32.
+	* config/avr32/uc3fpu.md: Patches for AVR32.
+
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
 	AVR32 patch 33-gcc-avr32-ucr3fp
 
 	* config/avr32/avr32.c: Patches for AVR32.

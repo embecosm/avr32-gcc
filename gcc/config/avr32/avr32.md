@@ -54,7 +54,7 @@
    (UNSPEC_PIC_BASE             11)
    (UNSPEC_STORE_MULTIPLE       12)
    (UNSPEC_STMFP                13)
-   (UNSPEC_FPCC_TO_REG          14)
+   (UNSPEC_FRCPA                14)
    (UNSPEC_REG_TO_CC            15)
    (UNSPEC_FORCE_MINIPOOL       16)
    (UNSPEC_SATS                 17)
@@ -901,8 +901,7 @@
 (define_insn_and_split "*movdf_internal"
   [(set (match_operand:DF 0 "nonimmediate_operand"     "=r,r,r,r,m")
 	(match_operand:DF 1 "general_operand"          " r,G,F,m,r"))]
-  "TARGET_SOFT_FLOAT
-   && (register_operand (operands[0], DFmode)
+  "(register_operand (operands[0], DFmode)
        || register_operand (operands[1], DFmode))"
   {
     switch (which_alternative ){
@@ -921,8 +920,7 @@
       abort();
     }
   }
-  "TARGET_SOFT_FLOAT
-   && reload_completed
+  "reload_completed
    && (REG_P (operands[0]) 
         && (REG_P (operands[1])
             || GET_CODE (operands[1]) == CONST_DOUBLE))"
@@ -2161,6 +2159,7 @@
 ;;-----------------------------------------------------------------------------
 ;; Signed division that produces both a quotient and a remainder.
 ;;=============================================================================
+
 (define_expand "divmodsi4"
   [(parallel [
      (parallel [
@@ -2175,16 +2174,13 @@
   {
     if (can_create_pseudo_p ()) {
       operands[4] = gen_reg_rtx (DImode);
-
       emit_insn(gen_divmodsi4_internal(operands[4],operands[1],operands[2]));
       emit_move_insn(operands[0], gen_rtx_SUBREG( SImode, operands[4], 4));
       emit_move_insn(operands[3], gen_rtx_SUBREG( SImode, operands[4], 0));
-
       DONE;
     } else {
       FAIL;
     }
-
   })
 
 
@@ -2410,6 +2406,26 @@
   [(set_attr "length" "4")
    (set_attr "cc" "compare")])
 
+(define_expand "cmpsf"
+  [(set (cc0)
+	(compare:SF
+	 (match_operand:SF 0 "general_operand" "")
+	 (match_operand:SF 1 "general_operand"  "")))]
+  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "{
+   rtx tmpreg;
+   if ( !REG_P(operands[0]) )
+     operands[0] = force_reg(SFmode, operands[0]);
+
+   if ( !REG_P(operands[1]) )
+     operands[1] = force_reg(SFmode, operands[1]);
+
+   avr32_compare_op0 = operands[0];
+   avr32_compare_op1 = operands[1];
+   emit_insn(gen_cmpsf_internal_uc3fp(operands[0], operands[1]));
+   DONE;
+  }"
+)
 
 ;;;=============================================================================
 ;; Test if zero
@@ -4938,5 +4954,5 @@
 ;; Load the SIMD description
 (include "simd.md")
 
-;; Load the FP coprAocessor patterns
-(include "fpcp.md")
+;; Include the FPU for uc3
+(include "uc3fpu.md")

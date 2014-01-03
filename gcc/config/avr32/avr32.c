@@ -2301,13 +2301,6 @@ rtx avr32_acc_cache = NULL_RTX;
 int
 avr32_hard_regno_mode_ok (int regnr, enum machine_mode mode)
 {
-  /* We allow only float modes in the fp-registers */
-  if (regnr >= FIRST_FP_REGNUM
-      && regnr <= LAST_FP_REGNUM && GET_MODE_CLASS (mode) != MODE_FLOAT)
-    {
-      return 0;
-    }
-
   switch (mode)
     {
       case DImode:		/* long long */
@@ -2408,44 +2401,6 @@ avr32_const_ok_for_constraint_p (HOST_WIDE_INT value, char c, const char *str)
     }
 
   return 0;
-}
-
-
-/* Compute mask of which floating-point registers needs saving upon
-  entry to this function. */
-static unsigned long
-avr32_compute_save_fp_reg_mask (void)
-{
-  unsigned long func_type = avr32_current_func_type ();
-  unsigned int save_reg_mask = 0;
-  unsigned int reg;
-  unsigned int max_reg = 7;
-  int save_all_call_used_regs = FALSE;
-
-  /* This only applies for hardware floating-point implementation. */
-  if (!TARGET_HARD_FLOAT)
-    return 0;
-
-  if (IS_INTERRUPT (func_type))
-    {
-
-      /* Interrupt functions must not corrupt any registers, even call
-         clobbered ones.  If this is a leaf function we can just examine the
-         registers used by the RTL, but otherwise we have to assume that
-         whatever function is called might clobber anything, and so we have
-         to save all the call-clobbered registers as well. */
-      max_reg = 13;
-      save_all_call_used_regs = !current_function_is_leaf;
-    }
-
-  /* All used registers used must be saved */
-  for (reg = 0; reg <= max_reg; reg++)
-    if (df_regs_ever_live_p (INTERNAL_FP_REGNUM (reg))
-	|| (save_all_call_used_regs
-	    && call_used_regs[INTERNAL_FP_REGNUM (reg)]))
-      save_reg_mask |= (1 << reg);
-
-  return save_reg_mask;
 }
 
 
@@ -2630,7 +2585,6 @@ avr32_use_return_insn (int iscond)
 {
   unsigned int func_type = avr32_current_func_type ();
   unsigned long saved_int_regs;
-  unsigned long saved_fp_regs;
 
   /* Never use a return instruction before reload has run. */
   if (!reload_completed)
@@ -2645,12 +2599,6 @@ avr32_use_return_insn (int iscond)
     return 0;
 
   saved_int_regs = avr32_compute_save_reg_mask (TRUE);
-  saved_fp_regs = avr32_compute_save_fp_reg_mask ();
-
-  /* Functions which have saved fp-regs on the stack can not be performed in
-     one instruction */
-  if (saved_fp_regs)
-    return 0;
 
   /* Conditional returns can not be performed in one instruction if we need
      to restore registers from the stack */
@@ -2811,52 +2759,6 @@ emit_multi_reg_push (int reglist, int usePUSHM)
   return insn;
 }
 
-
-static rtx
-emit_multi_fp_reg_push (int reglist)
-{
-  rtx insn;
-  rtx dwarf;
-  rtx tmp;
-  rtx reg;
-  int i;
-  int nr_regs;
-  int index = 0;
-
-  insn = emit_insn (gen_stm_fp (stack_pointer_rtx,
-				gen_rtx_CONST_INT (SImode, reglist),
-				gen_rtx_CONST_INT (SImode, 1)));
-
-  nr_regs = avr32_get_reg_mask_size (reglist) / 4;
-  dwarf = gen_rtx_SEQUENCE (VOIDmode, rtvec_alloc (nr_regs + 1));
-
-  for (i = 15; i >= 0; i--)
-    {
-      if (reglist & (1 << i))
-	{
-	  reg = gen_rtx_REG (SImode, INTERNAL_FP_REGNUM (i));
-	  tmp = gen_rtx_SET (VOIDmode,
-			     gen_rtx_MEM (SImode,
-					  plus_constant (stack_pointer_rtx,
-							 4 * index)), reg);
-	  RTX_FRAME_RELATED_P (tmp) = 1;
-	  XVECEXP (dwarf, 0, 1 + index++) = tmp;
-	}
-    }
-
-  tmp = gen_rtx_SET (SImode,
-		     stack_pointer_rtx,
-		     gen_rtx_PLUS (SImode,
-				   stack_pointer_rtx,
-				   GEN_INT (-4 * nr_regs)));
-  RTX_FRAME_RELATED_P (tmp) = 1;
-  XVECEXP (dwarf, 0, 0) = tmp;
-  REG_NOTES (insn) = gen_rtx_EXPR_LIST (REG_FRAME_RELATED_EXPR, dwarf,
-					REG_NOTES (insn));
-  return insn;
-}
-
-
 rtx
 avr32_gen_load_multiple (rtx * regs, int count, rtx from,
 			 int write_back, int in_struct_p, int scalar_p)
@@ -3015,7 +2917,7 @@ void
 avr32_expand_prologue (void)
 {
   rtx insn, dwarf;
-  unsigned long saved_reg_mask, saved_fp_reg_mask;
+  unsigned long saved_reg_mask;
   int reglist8 = 0;
 
   /* Naked functions do not have a prologue. */
@@ -3107,17 +3009,6 @@ avr32_expand_prologue (void)
 	{
 	  insn = emit_multi_reg_push (saved_reg_mask, FALSE);
 	}
-      RTX_FRAME_RELATED_P (insn) = 1;
-
-      /* Prevent this instruction from being scheduled after any other
-         instructions.  */
-      emit_insn (gen_blockage ());
-    }
-
-  saved_fp_reg_mask = avr32_compute_save_fp_reg_mask ();
-  if (saved_fp_reg_mask)
-    {
-      insn = emit_multi_fp_reg_push (saved_fp_reg_mask);
       RTX_FRAME_RELATED_P (insn) = 1;
 
       /* Prevent this instruction from being scheduled after any other
@@ -3270,7 +3161,7 @@ avr32_output_return_instruction (int single_ret_inst ATTRIBUTE_UNUSED,
 				 rtx cond ATTRIBUTE_UNUSED, rtx r12_imm)
 {
 
-  unsigned long saved_reg_mask, saved_fp_reg_mask;
+  unsigned long saved_reg_mask;
   int insert_ret = TRUE;
   int reglist8 = 0;
   int stack_adjustment = get_frame_size ();
@@ -3280,8 +3171,6 @@ avr32_output_return_instruction (int single_ret_inst ATTRIBUTE_UNUSED,
   /* Naked functions does not have an epilogue */
   if (IS_NAKED (func_type))
     return;
-
-  saved_fp_reg_mask = avr32_compute_save_fp_reg_mask ();
 
   saved_reg_mask = avr32_compute_save_reg_mask (FALSE);
 
@@ -3301,19 +3190,6 @@ avr32_output_return_instruction (int single_ret_inst ATTRIBUTE_UNUSED,
 	  fprintf (f, "\torh\tr8, hi(%i) # Reset Frame Pointer\n",
 		   -stack_adjustment);
 	  fprintf (f, "\tadd\tsp, r8  # Reset Frame Pointer\n");
-	}
-    }
-
-  if (saved_fp_reg_mask)
-    {
-      char reglist[64];		/* 64 bytes should be enough... */
-      avr32_make_fp_reglist_w (saved_fp_reg_mask, (char *) reglist);
-      fprintf (f, "\tldcm.w\tcp0, sp++, %s\n", reglist);
-      if (saved_fp_reg_mask & ~0xff)
-	{
-	  saved_fp_reg_mask &= ~0xff;
-	  avr32_make_fp_reglist_d (saved_fp_reg_mask, (char *) reglist);
-	  fprintf (f, "\tldcm.d\tcp0, sp++, %s\n", reglist);
 	}
     }
 
@@ -3457,55 +3333,6 @@ avr32_output_return_instruction (int single_ret_inst ATTRIBUTE_UNUSED,
     }
 }
 
-
-/* Function for converting a fp-register mask to a
-   reglistCPD8 register list string. */
-void
-avr32_make_fp_reglist_d (int reglist_mask, char *reglist_string)
-{
-  int i;
-
-  /* Make sure reglist_string is empty */
-  reglist_string[0] = '\0';
-
-  for (i = 0; i < NUM_FP_REGS; i += 2)
-    {
-      if (reglist_mask & (1 << i))
-	{
-	  if (strlen (reglist_string))
-            { 
-  	      strcat (reglist_string, ", ");
-	    }
-          strcat (reglist_string,reg_names[INTERNAL_FP_REGNUM (i)]);
-	  strcat (reglist_string, "-");
-	  strcat (reglist_string,reg_names[INTERNAL_FP_REGNUM (i + 1)]);
-	}
-    }
-}
-
-
-/* Function for converting a fp-register mask to a
-   reglistCP8 register list string. */
-void
-avr32_make_fp_reglist_w (int reglist_mask, char *reglist_string)
-{
-  int i;
-
-  /* Make sure reglist_string is empty. */
-  reglist_string[0] = '\0';
-
-  for (i = 0; i < NUM_FP_REGS; ++i)
-    {
-      if (reglist_mask & (1 << i))
-	{
-	  if (strlen (reglist_string))
-	      strcat(reglist_string, ", ");
-          strcat (reglist_string, reg_names[INTERNAL_FP_REGNUM (i)]);
-	}
-    }
-}
-
-
 void
 avr32_make_reglist16 (int reglist16_vect, char *reglist16_string)
 {
@@ -3523,7 +3350,6 @@ avr32_make_reglist16 (int reglist16_vect, char *reglist16_string)
 	}
     }
 }
-
 
 int
 avr32_convert_to_reglist16 (int reglist8_vect)
@@ -3548,7 +3374,6 @@ avr32_convert_to_reglist16 (int reglist8_vect)
 
   return reglist16_vect;
 }
-
 
 void
 avr32_make_reglist8 (int reglist8_vect, char *reglist8_string)
@@ -3635,21 +3460,14 @@ avr32_initial_elimination_offset (int from, int to)
 {
   int i;
   int call_saved_regs = 0;
-  unsigned long saved_reg_mask, saved_fp_reg_mask;
+  unsigned long saved_reg_mask;
   unsigned int local_vars = get_frame_size ();
 
   saved_reg_mask = avr32_compute_save_reg_mask (TRUE);
-  saved_fp_reg_mask = avr32_compute_save_fp_reg_mask ();
 
   for (i = 0; i < 16; ++i)
     {
       if (saved_reg_mask & (1 << i))
-	call_saved_regs += 4;
-    }
-
-  for (i = 0; i < NUM_FP_REGS; ++i)
-    {
-      if (saved_fp_reg_mask & (1 << i))
 	call_saved_regs += 4;
     }
 
@@ -4231,10 +4049,6 @@ avr32_legitimate_index_p (enum machine_mode mode, rtx index, int strict_p)
   /* Standard coprocessor addressing modes.  */
   if (code == CONST_INT)
     {
-      if (TARGET_HARD_FLOAT && GET_MODE_CLASS (mode) == MODE_FLOAT)
-	/* Coprocessor mem insns has a smaller reach than ordinary mem insns */
-	return CONST_OK_FOR_CONSTRAINT_P (INTVAL (index), 'K', "Ku14");
-      else
 	return CONST_OK_FOR_CONSTRAINT_P (INTVAL (index), 'K', "Ks16");
     }
 
@@ -4679,7 +4493,6 @@ avr32_notice_update_cc (rtx exp, rtx insn)
     {
     case CC_CALL_SET:
       CC_STATUS_INIT;
-      FPCC_STATUS_INIT;
       /* Check if the function call returns a value in r12 */
       if (REG_P (recog_data.operand[0])
 	  && REGNO (recog_data.operand[0]) == RETVAL_REGNUM)
@@ -4803,26 +4616,6 @@ avr32_notice_update_cc (rtx exp, rtx insn)
           }
 
       }
-      break;
-    case CC_FPCOMPARE:
-      /* Check that floating-point compare will not be optimized away if so
-         nothing should be done */
-      if (!rtx_equal_p (cc_prev_status.mdep.fpvalue, SET_SRC (exp)))
-	{
-	  /* cc0 already contains the correct comparison -> delete cmp insn */
-	  /* Reset the nonstandard flag */
-	  cc_status.mdep.fpvalue = SET_SRC (exp);
-	  cc_status.mdep.fpflags = CC_SET_CZ;
-	}
-      break;
-    case CC_FROM_FPCC:
-      /* Flags are updated with flags from Floating-point coprocessor, set
-         CC_NOT_SIGNED flag since the flags are set so that unsigned
-         condidion codes can be used directly. */
-      CC_STATUS_INIT;
-      cc_status.flags = CC_NOT_SIGNED;
-      cc_status.mdep.value = cc_status.mdep.fpvalue;
-      cc_status.mdep.flags = cc_status.mdep.fpflags;
       break;
     case CC_BLD:
       /* Bit load is kind of like an inverted testsi, because the Z flag is
@@ -5181,22 +4974,6 @@ avr32_print_operand (FILE * stream, rtx x, int code)
 	      fputs (reglist16_string, stream);
 	      return;
 	    }
-	  case 'C':
-	    {
-	      /* RegListCP8 */
-	      char reglist_string[100];
-	      avr32_make_fp_reglist_w (value, (char *) reglist_string);
-	      fputs (reglist_string, stream);
-	      return;
-	    }
-	  case 'D':
-	    {
-	      /* RegListCPD8 */
-	      char reglist_string[100];
-	      avr32_make_fp_reglist_d (value, (char *) reglist_string);
-	      fputs (reglist_string, stream);
-	      return;
-	    }
 	  case 'h':
 	    /* Print halfword part of word */
 	    fputs (value ? "b" : "t", stream);
@@ -5483,7 +5260,6 @@ avr32_print_operand (FILE * stream, rtx x, int code)
       internal_error ("Illegal expression for avr32_print_operand");
     }
 }
-
 
 rtx
 avr32_get_note_reg_equiv (rtx insn)
@@ -6444,16 +6220,6 @@ push_minipool_fix (rtx insn, HOST_WIDE_INT address, rtx * loc,
   else if (GET_CODE (body) == SET
            && GET_MODE_SIZE (GET_MODE (SET_DEST (body))) == 4)
     {
-        /* Word Load */
-      if (TARGET_HARD_FLOAT
-          && GET_MODE_CLASS (GET_MODE (SET_DEST (body))) == MODE_FLOAT)
-        {
-          /* Ldc0.w : Ku12 << 2 */
-          fix->forwards = ((1 << 12) - 1) << 2;
-          fix->backwards = 0;
-        }
-      else
-        {
           if (optimize_size)
             {
               /* Lddpc : Ku7 << 2 */
@@ -6467,25 +6233,13 @@ push_minipool_fix (rtx insn, HOST_WIDE_INT address, rtx * loc,
               fix->backwards = (1 << 15);
             }
         }
-    }
   else if (GET_CODE (body) == SET
            && GET_MODE_SIZE (GET_MODE (SET_DEST (body))) == 8)
     {
-      /* Double word load */
-      if (TARGET_HARD_FLOAT
-          && GET_MODE_CLASS (GET_MODE (SET_DEST (body))) == MODE_FLOAT)
-        {
-          /* Ldc0.d : Ku12 << 2 */
-          fix->forwards = ((1 << 12) - 1) << 2;
-          fix->backwards = 0;
-        }
-      else
-        {
           /* Ld.d : Ks16 */
           fix->forwards = ((1 << 15) - 4);
           fix->backwards = (1 << 15);
         }
-    }
   else if (GET_CODE (body) == UNSPEC_VOLATILE
            && XINT (body, 1) == VUNSPEC_MVRC)
     {

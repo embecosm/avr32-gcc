@@ -308,11 +308,6 @@
        (match_test "(INTVAL(op) == 0) || (INTVAL(op) == 8)
                     || (INTVAL(op) == 16) || (INTVAL(op) == 24)")))
 
-;; True if this is a floating-point register.
-(define_predicate "avr32_fp_register_operand"
-  (and (match_operand 0 "register_operand")
-       (match_test "REGNO_REG_CLASS(REGNO(op)) == FP_REGS")))
-
 ;; True if this is a valid avr32 symbol operand.
 (define_predicate "avr32_symbol_operand"
    (and (match_code "label_ref, symbol_ref, const")
@@ -417,3 +412,11 @@
 (define_predicate "avr32_non_rmw_nonimmediate_operand"
   (and (not (match_operand 0 "avr32_rmw_memory_operand"))
        (match_operand 0 "nonimmediate_operand")))
+
+;; Return true if the operand is the 1.0f constant.
+
+(define_predicate "const_1f_operand"
+  (match_code "const_int,const_double")
+{
+  return (op == CONST1_RTX (SFmode));
+})

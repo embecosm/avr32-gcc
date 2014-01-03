@@ -191,5 +191,6 @@ int avr32_cond_imm_clobber_splittable (rtx insn,
                                        rtx operands[]);
 
 bool avr32_flashvault_call(tree decl);
+extern void avr32_emit_swdivsf (rtx, rtx, rtx);
 
 #endif /* AVR32_PROTOS_H */

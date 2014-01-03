@@ -728,12 +728,10 @@ that has as much precision as long long unsigned int.
 /* Convert from gcc internal register number to register number
    used in assembly code */
 #define ASM_REGNUM(reg) (LAST_REGNUM - (reg))
-#define ASM_FP_REGNUM(reg) (LAST_FP_REGNUM - (reg))
 
 /* Convert between register number used in assembly to gcc
    internal register number  */
 #define INTERNAL_REGNUM(reg) (LAST_REGNUM - (reg))
-#define INTERNAL_FP_REGNUM(reg) (LAST_FP_REGNUM - (reg))
 
 /** Basic Characteristics of Registers **/
 
@@ -743,13 +741,10 @@ numbers 0 through FIRST_PSEUDO_REGISTER-1; thus, the first
 pseudo register's number really is assigned the number
 FIRST_PSEUDO_REGISTER.
 */
-#define FIRST_PSEUDO_REGISTER (LAST_FP_REGNUM + 1)
+#define FIRST_PSEUDO_REGISTER (LAST_REGNUM + 1)
 
 #define FIRST_REGNUM 0
 #define LAST_REGNUM 15
-#define NUM_FP_REGS 16
-#define FIRST_FP_REGNUM 16
-#define LAST_FP_REGNUM (16+NUM_FP_REGS-1)
 
 /*
 An initializer that says which registers are used for fixed purposes
@@ -796,22 +791,6 @@ the user with the command options -ffixed-[reg],
   0, /* r2 */			\
   0, /* r1 */			\
   0, /* r0 */			\
-  0, /* f15 */			\
-  0, /* f14 */			\
-  0, /* f13 */			\
-  0, /* f12 */			\
-  0, /* f11 */			\
-  0, /* f10 */			\
-  0, /* f9 */			\
-  0, /* f8 */			\
-  0, /* f7 */			\
-  0, /* f6 */			\
-  0, /* f5 */			\
-  0, /* f4 */			\
-  0, /* f3 */			\
-  0, /* f2*/			\
-  0, /* f1 */			\
-  0  /* f0 */			\
 }
 
 /*
@@ -842,22 +821,6 @@ exit, if the register is used within the function.
   0, /* r2 */			\
   0, /* r1 */			\
   0, /* r0 */			\
-  1, /* f15 */			\
-  1, /* f14 */			\
-  1, /* f13 */			\
-  1, /* f12 */			\
-  1, /* f11 */			\
-  1, /* f10 */			\
-  1, /* f9 */			\
-  1, /* f8 */			\
-  0, /* f7 */			\
-  0, /* f6 */			\
-  0, /* f5 */			\
-  0, /* f4 */			\
-  0, /* f3 */			\
-  0, /* f2*/			\
-  0, /* f1*/			\
-  0, /* f0 */			\
 }
 
 /* Interrupt functions can only use registers that have already been
@@ -901,14 +864,6 @@ these registers when the target switches are opposed to them.)
 #define CONDITIONAL_REGISTER_USAGE                              \
   do								\
     {								\
-      int regno;						\
-								\
-      if (TARGET_SOFT_FLOAT)			                \
-	{							\
-	  for (regno = FIRST_FP_REGNUM;				\
-	       regno <= LAST_FP_REGNUM; ++regno)	        \
-	    fixed_regs[regno] = call_used_regs[regno] = 1;	\
-	}							\
       if (flag_pic)						\
 	{							\
 	  fixed_regs[PIC_OFFSET_TABLE_REGNUM] = 1;		\
@@ -958,22 +913,6 @@ the highest numbered allocable register first.
   INTERNAL_REGNUM(2),		\
   INTERNAL_REGNUM(1),		\
   INTERNAL_REGNUM(0),		\
-  INTERNAL_FP_REGNUM(15),	\
-  INTERNAL_FP_REGNUM(14),	\
-  INTERNAL_FP_REGNUM(13),	\
-  INTERNAL_FP_REGNUM(12),	\
-  INTERNAL_FP_REGNUM(11),	\
-  INTERNAL_FP_REGNUM(10),	\
-  INTERNAL_FP_REGNUM(9),	\
-  INTERNAL_FP_REGNUM(8),	\
-  INTERNAL_FP_REGNUM(7),	\
-  INTERNAL_FP_REGNUM(6),	\
-  INTERNAL_FP_REGNUM(5),	\
-  INTERNAL_FP_REGNUM(4),	\
-  INTERNAL_FP_REGNUM(3),	\
-  INTERNAL_FP_REGNUM(2),	\
-  INTERNAL_FP_REGNUM(1),	\
-  INTERNAL_FP_REGNUM(0),	\
   SP_REGNUM,           		\
   PC_REGNUM			\
 }
@@ -1094,7 +1033,6 @@ enum reg_class
 {
   NO_REGS,
   GENERAL_REGS,
-  FP_REGS,
   ALL_REGS,
   LIM_REG_CLASSES
 };
@@ -1113,7 +1051,6 @@ constants.  These names are used in writing some of the debugging dumps.
 {				\
   "NO_REGS",			\
   "GENERAL_REGS",		\
-  "FLOATING_POINT_REGS",	\
   "ALL_REGS"			\
 }
 
@@ -1134,7 +1071,6 @@ so on.
 #define REG_CLASS_CONTENTS {		\
   {0x00000000}, /* NO_REGS */		\
   {0x0000FFFF}, /* GENERAL_REGS */	\
-  {0xFFFF0000}, /* FP_REGS */		\
   {0x7FFFFFFF}, /* ALL_REGS */		\
 }
 
@@ -1145,7 +1081,7 @@ REGNO.  In general there is more than one such class; choose a class
 which is minimal, meaning that no smaller class also contains the
 register.
 */
-#define REGNO_REG_CLASS(REGNO) ((REGNO < 16) ? GENERAL_REGS : FP_REGS)
+#define REGNO_REG_CLASS(REGNO) (GENERAL_REGS)
 
 /*
 A macro whose definition is the name of the class to which a valid
@@ -1178,8 +1114,7 @@ the value should be NO_REGS.  The register letter r,
 corresponding to class GENERAL_REGS, will not be passed
 to this macro; you do not need to handle it.
 */
-#define REG_CLASS_FROM_LETTER(CHAR) ((CHAR) == 'f' ? FP_REGS : NO_REGS)
-
+#define REG_CLASS_FROM_LETTER(CHAR) NO_REGS
 
 /* These assume that REGNO is a hard or pseudo reg number.
    They give nonzero only if REGNO is a hard reg of the suitable class
@@ -1461,8 +1396,6 @@ DWARF_FRAME_RETURN_COLUMN to DWARF_FRAME_REGNUM (REGNO).
 */
 #define INCOMING_RETURN_ADDR_RTX gen_rtx_REG (Pmode, LR_REGNUM)
 
-
-
 /*
 A C expression whose value is an integer giving the offset, in bytes,
 from the value of the stack pointer register to the top of the stack
@@ -1587,8 +1520,6 @@ choose any register you wish for this purpose.
 /* Use r7 */
 #define FRAME_POINTER_REGNUM INTERNAL_REGNUM(7)
 
-
-
 /*
 The register number of the arg pointer register, which is used to access
 the function's argument list.  On some machines, this is the same as the
@@ -1618,7 +1549,6 @@ defined; instead, the next two macros should be defined.
 */
 /* Using r0 */
 #define STATIC_CHAIN_REGNUM INTERNAL_REGNUM(0)
-
 
 /** Eliminating Frame Pointer and Arg Pointer **/
 
@@ -1725,7 +1655,6 @@ it.  When PUSH_ARGS is nonzero, PUSH_ROUNDING must be defined too.
 */
 #define PUSH_ARGS 1
 
-
 /*
 A C expression that is the number of bytes actually pushed onto the
 stack when an instruction attempts to push NPUSHED bytes.
@@ -1753,9 +1682,6 @@ increase the stack frame size by this amount.
 Setting both PUSH_ARGS and ACCUMULATE_OUTGOING_ARGS is not proper.
 */
 #define ACCUMULATE_OUTGOING_ARGS 0
-
-
-
 
 /*
 A C expression that should indicate the number of bytes of its own
@@ -1873,9 +1799,6 @@ a register.  */
 #define FUNCTION_ARG(CUM, MODE, TYPE, NAMED) \
   avr32_function_arg(&(CUM), MODE, TYPE, NAMED)
 
-
-
-
 /*
 A C type for declaring a variable that is used as the first argument of
 FUNCTION_ARG and other related values.  For some target machines,
@@ -1923,7 +1846,6 @@ typedef struct avr32_args
   while (0)
 #define SET_INDEXES_UNUSED(CUM) ((CUM)->used_index = 0)
 
-
 /*
    A C statement (sans semicolon) for initializing the variable cum for the
    state at the beginning of the argument list. The variable has type
@@ -1944,7 +1866,6 @@ typedef struct avr32_args
 */
 #define INIT_CUMULATIVE_ARGS(CUM, FNTYPE, LIBNAME, FNDECL, N_NAMED_ARGS) \
   avr32_init_cumulative_args(&(CUM), FNTYPE, LIBNAME, FNDECL)
-
 
 /*
 A C statement (sans semicolon) to update the summarizer variable
@@ -2000,7 +1921,6 @@ arguments are padded down if BYTES_BIG_ENDIAN is true.
 #define PAD_VARARGS_DOWN \
   (FUNCTION_ARG_PADDING (TYPE_MODE (type), type) == downward)
 
-
 /*
 A C expression that is nonzero if REGNO is the number of a hard
 register in which function arguments are sometimes passed.  This does
@@ -2030,7 +1950,6 @@ passed in registers.
 
 /* AVR32 is using r12 as return register. */
 #define RET_REGISTER (15 - 12)
-
 
 /*
 A C expression to create an RTX representing the place where a library
@@ -2390,8 +2309,6 @@ typedef struct
 {
   int flags;
   rtx value;
-  int fpflags;
-  rtx fpvalue;
   int cond_exec_cmp_clobbered;
 } avr32_status_reg;
 
@@ -2409,9 +2326,6 @@ This macro is not used on machines that do not use cc0.
 
 #define CC_STATUS_MDEP_INIT  \
    (cc_status.mdep.flags = CC_NONE , cc_status.mdep.cond_exec_cmp_clobbered = 0, cc_status.mdep.value = 0)
-
-#define FPCC_STATUS_INIT \
-   (cc_status.mdep.fpflags = CC_NONE , cc_status.mdep.fpvalue = 0)
 
 /*
 A C compound statement to set the components of cc_status
@@ -2964,14 +2878,6 @@ register numbers in the compiler into assembler language.
   "r5",  "r4",		\
   "r3",  "r2",		\
   "r1",  "r0",		\
-  "f15","f14",		\
-  "f13","f12",		\
-  "f11","f10",		\
-  "f9", "f8",		\
-  "f7", "f6",		\
-  "f5", "f4",		\
-  "f3", "f2",		\
-  "f1", "f0"		\
 }
 
 /*
