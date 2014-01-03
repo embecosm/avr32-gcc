@@ -213,7 +213,7 @@ avr32_optimization_options (int level, int size)
 
   /* Enable section anchors if optimization is enabled. */
   if (level > 0 || size)
-    flag_section_anchors = 1;
+    flag_section_anchors = 2;
 }
 
 
@@ -2408,12 +2408,12 @@ avr32_const_ok_for_constraint_p (HOST_WIDE_INT value, char c, const char *str)
 	size_str[2] = '\0';
 	const_size = atoi (size_str);
 
-	if (toupper (str[1]) == 'U')
+	if (TOUPPER (str[1]) == 'U')
 	  {
 	    min_value = 0;
 	    max_value = (1 << const_size) - 1;
 	  }
-	else if (toupper (str[1]) == 'S')
+	else if (TOUPPER (str[1]) == 'S')
 	  {
 	    min_value = -(1 << (const_size - 1));
 	    max_value = (1 << (const_size - 1)) - 1;
@@ -2506,7 +2506,7 @@ avr32_compute_save_reg_mask (int push)
 
       /* Make sure that the GOT register is pushed. */
       if (max_reg >= ASM_REGNUM (PIC_OFFSET_TABLE_REGNUM)
-	  && current_function_uses_pic_offset_table)
+	  && crtl->uses_pic_offset_table)
 	save_reg_mask |= (1 << ASM_REGNUM (PIC_OFFSET_TABLE_REGNUM));
 
     }
@@ -2522,7 +2522,7 @@ avr32_compute_save_reg_mask (int push)
 	  save_reg_mask |= (1 << reg);
 
       /* Make sure that the GOT register is pushed. */
-      if (current_function_uses_pic_offset_table)
+      if (crtl->uses_pic_offset_table)
 	save_reg_mask |= (1 << ASM_REGNUM (PIC_OFFSET_TABLE_REGNUM));
 
 
@@ -2550,7 +2550,7 @@ avr32_compute_save_reg_mask (int push)
         || !current_function_is_leaf
         || (optimize_size
         && save_reg_mask
-        && !current_function_calls_eh_return)
+        && !crtl->calls_eh_return)
           || frame_pointer_needed)
           && !IS_FLASHVAULT (func_type))
 	{
@@ -2559,7 +2559,7 @@ avr32_compute_save_reg_mask (int push)
 	         calls __builtin_eh_return, since we need to
 	         fix the SP after the restoring of the registers
 	         and before returning. */
-	      || current_function_calls_eh_return)
+	      || crtl->calls_eh_return)
 	    {
 	      /* Push/Pop LR */
 	      save_reg_mask |= (1 << ASM_REGNUM (LR_REGNUM));
@@ -2574,7 +2574,7 @@ avr32_compute_save_reg_mask (int push)
 
 
   /* Save registers so the exception handler can modify them.  */
-  if (current_function_calls_eh_return)
+  if (crtl->calls_eh_return)
     {
       unsigned int i;
 
@@ -2634,7 +2634,7 @@ avr32_use_return_insn (int iscond)
     return 0;
 
   /* Must adjust the stack for vararg functions. */
-  if (current_function_args_info.uses_anonymous_args)
+  if (crtl->args.info.uses_anonymous_args)
     return 0;
 
   /* If there a stack adjstment.  */
@@ -2728,16 +2728,16 @@ avr32_target_asm_function_prologue (FILE * f, HOST_WIDE_INT frame_size)
 
 
   fprintf (f, "\t# args = %i, frame = %li, pretend = %i\n",
-           current_function_args_size, frame_size,
-           current_function_pretend_args_size);
+           crtl->args.size, frame_size,
+           crtl->args.pretend_args_size);
 
   fprintf (f, "\t# frame_needed = %i, leaf_function = %i\n",
            frame_pointer_needed, current_function_is_leaf);
 
   fprintf (f, "\t# uses_anonymous_args = %i\n",
-           current_function_args_info.uses_anonymous_args);
+           crtl->args.info.uses_anonymous_args);
 
-  if (current_function_calls_eh_return)
+  if (crtl->calls_eh_return)
     fprintf (f, "\t# Calls __builtin_eh_return.\n");
 
 }
@@ -3346,7 +3346,7 @@ avr32_output_return_instruction (int single_ret_inst ATTRIBUTE_UNUSED,
     }
 
   /* Stack adjustment for exception handler.  */
-  if (current_function_calls_eh_return)
+  if (crtl->calls_eh_return)
     fprintf (f, "\tadd\tsp, r%d\n", ASM_REGNUM (EH_RETURN_STACKADJ_REGNO));
 
 
@@ -3883,7 +3883,7 @@ legitimize_pic_address (rtx orig, enum machine_mode mode ATTRIBUTE_UNUSED,
          set. This is because this function is also used if
          TARGET_HAS_ASM_ADDR_PSEUDOS is set. */
       if (flag_pic)
-	current_function_uses_pic_offset_table = 1;
+	crtl->uses_pic_offset_table = 1;
 
       /* Put a REG_EQUAL note on this insn, so that it can be optimized by
          loop.  */
@@ -3947,7 +3947,7 @@ avr32_load_pic_register (void)
   rtx l1, pic_tmp;
   rtx global_offset_table;
 
-  if ((current_function_uses_pic_offset_table == 0) || TARGET_NO_INIT_GOT)
+  if ((crtl->uses_pic_offset_table == 0) || TARGET_NO_INIT_GOT)
     return;
 
   if (!flag_pic)

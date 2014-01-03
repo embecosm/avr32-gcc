@@ -496,7 +496,7 @@
                                             (can_create_pseudo_p () ? 0: operands[0]));
     else if ( flag_pic && avr32_address_operand(operands[1], GET_MODE(operands[1])) )
       /* If we have an address operand then this function uses the pic register. */
-      current_function_uses_pic_offset_table = 1;
+      crtl->uses_pic_offset_table = 1;
   })
 
 
@@ -3043,7 +3043,7 @@
        /* We must however mark the function as using the GOT if flag_pic is set, since the call insn might turn into a mcall using the GOT ptr register. */
        if (flag_pic)
        {
-          current_function_uses_pic_offset_table = 1;
+          crtl->uses_pic_offset_table = 1;
           emit_call_insn(gen_call_internal(call_address, operands[1]));
           DONE;
        }
@@ -3052,7 +3052,7 @@
     {
       if (flag_pic && GET_CODE(call_address) == SYMBOL_REF )
       {
-        current_function_uses_pic_offset_table = 1;
+        crtl->uses_pic_offset_table = 1;
         emit_call_insn(gen_call_internal(call_address, operands[1]));
         DONE;
       }
@@ -3108,14 +3108,14 @@
           flag_pic is set, since the call insn might turn into
           a mcall using the GOT ptr register. */
        if ( flag_pic ) {
-          current_function_uses_pic_offset_table = 1;
+          crtl->uses_pic_offset_table = 1;
           emit_call_insn(gen_call_value_internal(operands[0], call_address, operands[2]));
           DONE;
        }
     } else {
       if ( flag_pic &&
            GET_CODE(call_address) == SYMBOL_REF ){
-        current_function_uses_pic_offset_table = 1;
+        crtl->uses_pic_offset_table = 1;
         emit_call_insn(gen_call_value_internal(operands[0], call_address, operands[2]));
         DONE;
       }
@@ -3352,7 +3352,7 @@
       operands[0] = legitimize_pic_address (operands[0], SImode, 0);
     else if ( flag_pic && avr32_address_operand(operands[0], GET_MODE(operands[0])) )
       /* If we have an address operand then this function uses the pic register. */
-      current_function_uses_pic_offset_table = 1;
+      crtl->uses_pic_offset_table = 1;
   })
 
 

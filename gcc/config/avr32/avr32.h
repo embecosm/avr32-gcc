@@ -1131,6 +1131,19 @@ register that has been allocated such a hard register.
 */
 #define REGNO_OK_FOR_BASE_P(NUM)  TEST_REGNO(NUM, <=, LAST_REGNUM)
 
+/* The following macro defines cover classes for Integrated Register
+   Allocator.  Cover classes is a set of non-intersected register
+   classes covering all hard registers used for register allocation
+   purpose.  Any move between two registers of a cover class should be
+   cheaper than load or store of the registers.  The macro value is
+   array of register classes with LIM_REG_CLASSES used as the end
+   marker.  */
+
+#define IRA_COVER_CLASSES               \
+{                                       \
+  GENERAL_REGS, LIM_REG_CLASSES         \
+}
+
 /*
 A C expression which is nonzero if register number NUM is
 suitable for use as an index register in operand addresses.  It may be
@@ -1574,7 +1587,7 @@ register can be allocated for ordinary usage, unless you mark it as a
 fixed register.  See FIXED_REGISTERS for more information.
 */
 /* We need the frame pointer when compiling for profiling */
-#define FRAME_POINTER_REQUIRED (current_function_profile)
+#define FRAME_POINTER_REQUIRED (crtl->profile)
 
 /*
 A C statement to store in the variable DEPTH_VAR the difference
@@ -2435,7 +2448,7 @@ A C expression for the cost of a branch instruction.  A value of 1 is
 the default; other values are interpreted relative to that.
 */
   /* Try to use conditionals as much as possible */
-#define BRANCH_COST (TARGET_BRANCH_PRED ? 3 : 4)
+#define BRANCH_COST(speed_p, predictable_p) (TARGET_BRANCH_PRED ? 3 : 4)
 
 /*A C expression for the maximum number of instructions to execute via conditional
   execution instructions instead of a branch. A value of BRANCH_COST+1 is the default
@@ -3138,7 +3151,7 @@ should be QImode.
 #define CTZ_DEFINED_VALUE_AT_ZERO(mode, value) \
   (value = 32, (mode == SImode))
 
-#define UNITS_PER_SIMD_WORD UNITS_PER_WORD
+#define UNITS_PER_SIMD_WORD(mode) UNITS_PER_WORD
 
 #define STORE_FLAG_VALUE 1
 
