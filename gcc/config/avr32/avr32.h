@@ -269,6 +269,7 @@ struct arch_type_s
 
 extern const struct part_type_s *avr32_part;
 extern const struct arch_type_s *avr32_arch;
+extern int avr32_emit_fpu_insns;
 
 #define TARGET_SIMD  (avr32_arch->feature_flags & FLAG_AVR32_HAS_SIMD)
 #define TARGET_DSP  (avr32_arch->feature_flags & FLAG_AVR32_HAS_DSP)
@@ -286,6 +287,7 @@ extern const struct arch_type_s *avr32_arch;
 #define TARGET_UARCH_AVR32A (avr32_arch->uarch_type == UARCH_TYPE_AVR32A)
 #define TARGET_UARCH_AVR32B (avr32_arch->uarch_type == UARCH_TYPE_AVR32B)
 #define TARGET_ARCH_FPU (avr32_arch->feature_flags & FLAG_AVR32_HAS_FPU)
+#define TARGET_EMIT_FPU_INSNS (avr32_emit_fpu_insns)
 
 #define CAN_DEBUG_WITHOUT_FP
 

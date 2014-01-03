@@ -21,7 +21,7 @@
 (define_insn "*movsf_uc3fp"
   [(set (match_operand:SF 0 "nonimmediate_operand"     "=r,r,r,m")
 	(match_operand:SF 1 "general_operand"          "r,G,m,r"))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "@
    mov\t%0, %1
    mov\t%0, %1
@@ -34,7 +34,7 @@
   [(set (match_operand:SF          0 "register_operand" "=r")
 	(mult:SF (match_operand:SF 1 "register_operand" "r")
 		 (match_operand:SF 2 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fmul.s\t%0, %1, %2"
   [(set_attr "length" "4")
    (set_attr "type" "fmul")])
@@ -43,7 +43,7 @@
   [(set (match_operand:SF          0 "register_operand" "=r")
 	(neg:SF (mult:SF (match_operand:SF 1 "register_operand" "%r")
                          (match_operand:SF 2 "register_operand" "r"))))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fnmul.s\t%0, %1, %2"
   [(set_attr "length" "4")
    (set_attr "type" "fmul")])
@@ -53,7 +53,7 @@
 	(plus:SF (mult:SF (match_operand:SF 1 "register_operand" "r")
                           (match_operand:SF 2 "register_operand" "r"))
                  (match_operand:SF 3 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fmac.s\t%0, %3, %1, %2"
   [(set_attr "length" "4")
    (set_attr "type" "fmul")])
@@ -63,7 +63,7 @@
 ;	(plus:SF  (neg:SF (match_operand:SF 1 "register_operand" "r"))
 ;                            (mult:SF(match_operand:SF 2 "register_operand" "r")
 ;                                    (match_operand:SF 3 "register_operand" "r"))))]
-;  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+;  "TARGET_EMIT_FPU_INSNS"
 ;  "fnmac.s\t%0, %1, %2, %3"
 ;  [(set_attr "length" "4")
 ;   (set_attr "type" "fmul")])
@@ -73,7 +73,7 @@
 	(minus:SF  (mult:SF (match_operand:SF 2 "register_operand" "r")
                         (match_operand:SF 3 "register_operand" "r"))
 	                    (match_operand:SF 1 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fnmac.s\t%0, %1, %2, %3"
   [(set_attr "length" "4")
    (set_attr "type" "fmul")])
@@ -83,7 +83,7 @@
 	(minus:SF (match_operand:SF 3 "register_operand" "r")
 	          (mult:SF (match_operand:SF 1 "register_operand" "r")
                        (match_operand:SF 2 "register_operand" "r"))))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fmsc.s\t%0, %3, %1, %2"
   [(set_attr "length" "4")
    (set_attr "type" "fmul")])
@@ -93,7 +93,7 @@
 	(minus:SF  (neg:SF (mult:SF (match_operand:SF 1 "register_operand" "r")
                                     (match_operand:SF 2 "register_operand" "r")))
                    (match_operand:SF 3 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fnmsc.s\t%0, %3, %1, %2"
   [(set_attr "length" "4")
    (set_attr "type" "fmul")])
@@ -102,7 +102,7 @@
   [(set (match_operand:SF 0 "register_operand" "=r")
 	(plus:SF (match_operand:SF 1 "register_operand" "%r")
                    (match_operand:SF 2 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fadd.s\t%0, %1, %2"
   [(set_attr "length" "4")
    (set_attr "type" "fmul")])
@@ -111,7 +111,7 @@
   [(set (match_operand:SF          0 "register_operand" "=r")
 	(minus:SF (match_operand:SF 1 "register_operand" "r")
                   (match_operand:SF 2 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fsub.s\t%0, %1, %2"
   [(set_attr "length" "4")
    (set_attr "type" "fmul")])
@@ -119,28 +119,28 @@
 (define_insn "fixuns_truncsfsi2"
   [(set (match_operand:SI 0 "register_operand" "=r")
 	(unsigned_fix:SI (match_operand:SF 1 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fcastrs.uw\t%0, %1"
   [(set_attr "length" "4")])
 
 (define_insn "fix_truncsfsi2"
   [(set (match_operand:SI 0 "register_operand" "=r")
 	(fix:SI (match_operand:SF 1 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fcastrs.sw\t%0, %1"
   [(set_attr "length" "4")])
 
 (define_insn "floatunssisf2"
   [(set (match_operand:SF 0 "register_operand" "=r")
         (unsigned_float:SF (match_operand:SI 1 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fcastuw.s\t%0, %1"
   [(set_attr "length" "4")])
 
 (define_insn "floatsisf2"
   [(set (match_operand:SF 0 "register_operand" "=r")
         (float:SF (match_operand:SI 1 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "fcastsw.s\t%0, %1"
   [(set_attr "length" "4")])
 
@@ -149,7 +149,7 @@
         (compare:CC
          (match_operand:SF 0 "register_operand" "r")
          (match_operand:SF 1 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   {
         avr32_branch_type = CMP_SF;
    if (!rtx_equal_p(cc_prev_status.mdep.value, SET_SRC(PATTERN (insn))) )
@@ -163,7 +163,7 @@
   [(set (match_operand:SF 0 "register_operand" "=r")
 	(div:SF (match_operand:SF 1 "register_operand" "r")
 		 (match_operand:SF 2 "register_operand" "r")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT && flag_unsafe_math_optimizations"
+  "TARGET_EMIT_FPU_INSNS && TARGET_UNSAFE_MATH"
   "{
     emit_insn(gen_frcpa_internal(operands[0],operands[2]));
     emit_insn(gen_mulsf3(operands[0],operands[0],operands[1]));
@@ -174,14 +174,14 @@
 (define_insn "frcpa_internal"
   [(set (match_operand:SF 0 "register_operand" "=r")
 	(unspec:SF [(match_operand:SF 1 "register_operand" "r")] UNSPEC_FRCPA))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "frcpa.s %0,%1"
   [(set_attr "length" "4")])
 
 (define_expand "sqrtsf2"
   [(set (match_operand:SF 0 "register_operand" "")
 	(sqrt:SF (match_operand:SF 1 "register_operand" "")))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT && flag_unsafe_math_optimizations"
+  "TARGET_EMIT_FPU_INSNS && TARGET_UNSAFE_MATH"
   "
 {
   rtx scratch = gen_reg_rtx (SFmode);
@@ -195,5 +195,5 @@
   [(set (match_operand:SF 0 "register_operand" "=r")
 	(div:SF (match_operand:SF 2 "const_1f_operand" "F")
 		(sqrt:SF (match_operand:SF 1 "register_operand" "?r"))))]
-  "TARGET_ARCH_FPU && TARGET_HARD_FLOAT"
+  "TARGET_EMIT_FPU_INSNS"
   "frsqrta.s %1, %0")

@@ -1,5 +1,16 @@
 2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
 
+	AVR32 patch 48-gcc-avr32-fix-AVRTC239-AVRTC200
+
+	* config/avr32/avr32.c: Patches for AVR32.
+	* config/avr32/avr32.h: Patches for AVR32.
+	* config/avr32/avr32.md: Patches for AVR32.
+	* config/avr32/avr32.opt: Patches for AVR32.
+	* config/avr32/uc3fpu.md: Patches for AVR32.
+	* config/avr32/t-avr32: Patches for AVR32.
+
+2013-12-31  Jeremy Bennett  <jeremy.bennett@embecosm.com>
+
 	AVR32 patch 47-gcc-avr32-bug-12477
 
 	* config/avr32/avr32.c: Patches for AVR32.

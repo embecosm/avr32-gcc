@@ -188,6 +188,7 @@ const char *avr32_part_name = "none";
 const struct part_type_s *avr32_part;
 const struct arch_type_s *avr32_arch;
 
+int avr32_emit_fpu_insns = 0;
 
 /* FIXME: needs to use GC.  */
 struct flashvault_decl_list
@@ -293,7 +294,11 @@ avr32_override_options (void)
   /* Enable fast-float library if unsafe math optimizations
      are used. */
   if (flag_unsafe_math_optimizations)
+  {
     target_flags |= MASK_FAST_FLOAT;
+    /* Enable -munsafe-math */
+    target_flags |= MASK_UNSAFE_MATH;
+  }
 
   /* Check if we should set avr32_imm_in_const_pool
      based on if caches are present or not. */
@@ -308,6 +313,25 @@ avr32_override_options (void)
   if (TARGET_NO_PIC)
     flag_pic = 0;
   avr32_add_gc_roots ();
+  
+  if (TARGET_ARCH_FPU) /* if the device has FPU (ucr3fp) */
+    {
+      if (TARGET_SOFT_FLOAT)  /* if -msoft-float */
+        avr32_emit_fpu_insns = 0; 
+      else /* if -mhard-float or if not -msoft-float */
+        avr32_emit_fpu_insns = 1;
+    }
+  else 
+    {
+      /* should be soft float regardless of the -mhard/soft-float
+         option */
+      avr32_emit_fpu_insns = 0; 
+      /* warn if -mhard-float is specified */
+      if (TARGET_HARD_FLOAT)
+        fprintf(stderr, 
+                "Warning: Invalid option -mhard-float for the part %s\n",
+                avr32_part_name);
+    }
 }
 
 

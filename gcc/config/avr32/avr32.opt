@@ -23,13 +23,17 @@ muse-rodata-section
 Target Report Mask(USE_RODATA_SECTION)
 Use section .rodata for read-only data instead of .text.
 
+munsafe-math
+Target Report Mask(UNSAFE_MATH)
+Emit UC3 FPU instruction sequences whose results may not comply to IEEE floating point standard. Enabled by default if the -funsafe-math-optimizations switch is specified
+
 mhard-float
 Target Report Mask(HARD_FLOAT)
-Use FPU instructions instead of floating point emulation.
+Emit UC3 FPU instructions instead of using floating point emulation (deprecated)
 
 msoft-float
-Target Report InverseMask(HARD_FLOAT, SOFT_FLOAT)
-Use floating point emulation for floating point operations.
+Target Report Mask(SOFT_FLOAT)
+Use software floating point emulation 
 
 mforce-double-align
 Target Report RejectNegative Mask(FORCE_DOUBLE_ALIGN)

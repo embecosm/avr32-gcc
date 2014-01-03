@@ -79,6 +79,8 @@ MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064revb
 
 EXTRA_MULTILIB_PARTS = crtbegin.o crtbeginS.o crtend.o crtendS.o crti.o crtn.o
 
+MULTILIB_EXTRA_OPTS = msoft-float
+
 CRTSTUFF_T_CFLAGS = -mrelax
 CRTSTUFF_T_CFLAGS_S = -mrelax -fPIC
 TARGET_LIBGCC2_CFLAGS += -mrelax
