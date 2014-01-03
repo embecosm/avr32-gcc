@@ -87,3 +87,7 @@ gcc can safely generate these whenever possible.
 mflashvault
 Target Var(TARGET_FLASHVAULT)
 Generate code for flashvault
+
+mlist-devices
+Target RejectNegative Var(avr32_list_supported_parts)
+Print the list of parts supported while printing --target-help.
