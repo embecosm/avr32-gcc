@@ -9429,7 +9429,8 @@ Generate code for the specified part. Permissible parts are:
 @samp{uc3l064},
 @samp{uc3l032},
 @samp{uc3l016},
-@samp{uc3l064revb}.
+@samp{uc3l064revb},
+@samp{mxt768e}.
 
 @item -mcpu=@var{cpu-type}
 @opindex mcpu

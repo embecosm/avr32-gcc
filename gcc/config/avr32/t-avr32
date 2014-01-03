@@ -75,6 +75,7 @@ MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l032
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l016
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3l064revb
+MULTILIB_MATCHES     += march?ucr3=mpart?mxt768e
 
 
 EXTRA_MULTILIB_PARTS = crtbegin.o crtbeginS.o crtend.o crtendS.o crti.o crtn.o
