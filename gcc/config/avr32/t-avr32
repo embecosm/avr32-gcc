@@ -64,6 +64,10 @@ MULTILIB_MATCHES     += march?ucr1=mpart?uc3b1256es
 MULTILIB_MATCHES     += march?ucr1=mpart?uc3b1256
 MULTILIB_MATCHES     += march?ucr2=mpart?uc3b1512
 MULTILIB_MATCHES     += march?ucr2=mpart?uc3b1512revc
+MULTILIB_MATCHES     += march?ucr3=mpart?uc64d3
+MULTILIB_MATCHES     += march?ucr3=mpart?uc128d3
+MULTILIB_MATCHES     += march?ucr3=mpart?uc64d4
+MULTILIB_MATCHES     += march?ucr3=mpart?uc128d4
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3c0512crevc
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3c1512crevc
 MULTILIB_MATCHES     += march?ucr3=mpart?uc3c2512crevc
