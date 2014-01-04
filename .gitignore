@@ -1,0 +1,4 @@
+# Ignore backup files.
+*~
+# Ignore autotools caches
+autom4te.cache
